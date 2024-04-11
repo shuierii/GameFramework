@@ -1,0 +1,59 @@
+# Compiled Object files
+# *.slo
+# *.lo
+# *.o
+# *.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+# *.so
+# *.dylib
+# *.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+# *.lai
+# *.la
+# *.a
+# *.lib
+
+# Executables
+# *.exe
+# *.out
+# *.app
+
+# 忽略目录
+.vs
+DerivedDataCache
+Intermediate
+Saved/
+Build/WindowsNoEditor
+Content/Blueprints/TypeScript
+Content/JavaScript
+Binaries/Win64/
+Plugins/*/Binaries/Win64/
+.idea
+.vscode
+Typing/*
+
+# 忽略指定文件
+GameFramework.sln
+.svn
+ue.d.ts
+ue_bp.d.ts
+ts_file_versions_info.json
+GameFramework.code-workspace
+
+# 忽略指定目录下所有文件
+# log/*
+
+# 忽略指定目录下指定格式文件
+# log/*.cpp
+
+# 忽略自己本地(无需上传)
+Binaries/
