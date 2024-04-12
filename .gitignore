@@ -57,3 +57,7 @@ GameFramework.code-workspace
 
 # 忽略自己本地(无需上传)
 Binaries/
+
+# puerts相关
+Plugins/Puerts/
+package.json
