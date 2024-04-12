@@ -6,6 +6,7 @@
  */
 
 import { IInitable } from "../Interface/IInitable";
+import { IModel } from "../Interface/IModel";
 import { IReleasable } from "../Interface/IReleasable";
 import { ISystem } from "../Interface/ISystem";
 
@@ -24,4 +25,19 @@ export interface IAntNest extends IInitable, IReleasable {
      * @return {*}
      */
     GetSystem<TSystem extends ISystem>(systemID: number): TSystem;
+
+    /**
+     * @description: 绑定数据模型
+     * @param {number} modelID
+     * @param {new} modelClass
+     * @return {*}
+     */
+    BindModel(modelID: number, modelClass: new (...args: any[]) => IModel): void;
+
+    /**
+     * @description: 获取数据模型
+     * @param {number} modelID
+     * @return {*}
+     */
+    GetModel<TModel extends IModel>(modelID: number): TModel;
 }

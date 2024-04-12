@@ -5,8 +5,10 @@
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 import * as UE from "ue";
+import { ModelID } from "./Const/ModelID";
 import { SystemID } from "./Const/SystemID";
 import { MainGame } from "./MainGame";
+import { TestModel } from "./Model/TestModel";
 import { TestSystem } from "./System/TestSystem";
 import { LogUtility } from "./Utility/LogUtility";
 
@@ -20,6 +22,9 @@ class TB_GameInstance extends UE.TS_GameInstance {
 
         // 注册系统
         MainGame.Instance.BindSystem(SystemID.TEST_SYSTEM, TestSystem);
+
+        // 注册数据模型
+        MainGame.Instance.BindModel(ModelID.TEST_MODEL, TestModel);
 
         // 初始化
         MainGame.Instance.Init();
