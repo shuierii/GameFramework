@@ -4,6 +4,12 @@
  * @Description:
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
+/*
+ * @Author: linb
+ * @Date: 2024-04-12 10:29:48
+ * @Description:
+ * @Copyright: Copyright HuanMos. All Rights Reserved.
+ */
 
 import { IInitable } from "../Interface/IInitable";
 import { IModel } from "../Interface/IModel";
@@ -64,4 +70,12 @@ export interface IAntNest extends IInitable, IReleasable {
      * @return {*}
      */
     UnregitsterEvent(listenerID: string): void;
+
+    /**
+     * @description: 执行脚本
+     * @param {string} ScriptID
+     * @param {any} params
+     * @return {*}
+     */
+    SendScript(ScriptID: string, params?: any[]): any;
 }

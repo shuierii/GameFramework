@@ -26,5 +26,6 @@ export class TestSystem extends SystemBase {
     private Test(): void {
         LogUtility.Error("系统测试接口----------------hello world");
         this.TriggerEvent(EventID.TEST_EVENT, ["TestSystem 触发事件 TEST_EVENT 事件"]);
+        this.SendScript("test",["TestSystem 执行 test 脚本"]);
     }
 }

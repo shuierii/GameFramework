@@ -5,7 +5,10 @@
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 import { IModel } from "../Interface/IModel";
+import { IScript } from "../Interface/IScript";
 import { ISystem } from "../Interface/ISystem";
+import { ScriptSet } from "../Script/ScriptSet";
+import { Script_Test } from "../Script/Script_Test";
 import { LogUtility } from "../Utility/LogUtility";
 import { IAntNest } from "./IAntNest";
 
@@ -19,7 +22,13 @@ export abstract class AntNestBase implements IAntNest {
     // <事件，<监听者，处理回调>>
     private mEventMap: Map<string, Map<string, (args?: any[]) => void>> = new Map();
 
+    // <脚本ID，脚本Class>
+    private mScriptClassMap: Map<string, new (...args: any[]) => IScript> = new Map();
+
     Init(): void {
+        // 注册所有脚本
+        this.CollectScript();
+
         // 先初始化数据，再初始化系统，因为系统会用到数据
         this.InitModel();
         this.InitSystem();
@@ -175,6 +184,69 @@ export abstract class AntNestBase implements IAntNest {
 
             map.delete(listenerID);
         }
+    }
+
+    /**
+     * @description: 执行脚本
+     * @param {string} ScriptID
+     * @param {any} params
+     * @return {*}
+     */
+    SendScript(ScriptID: string, params?: any[]): any {
+        if (!this.mScriptClassMap.has(ScriptID)) {
+            LogUtility.Error(`ScriptID_${ScriptID} is not exist.`);
+            return null;
+        }
+
+        // 获取脚本
+        let scriptClass = this.mScriptClassMap.get(ScriptID);
+        let scriptObj = new scriptClass();
+
+        let result = scriptObj.Excute(params);
+
+        return result;
+    }
+
+    /**
+     * @description: 收集所有脚本并注册
+     * @return {*}
+     */
+    private CollectScript(): void {
+        // 收集脚本
+        Script_Test.CollectScript();
+
+        // 导出脚本
+        let scriptMap = Object.entries(ScriptSet.mScriptClassMap);
+
+        // 遍历注册
+        for (let [scriptID, scriptClass] of scriptMap) {
+            // 剔除ID中的 Script_ 前缀
+            if (scriptID.startsWith("Script_"))
+                scriptID = scriptID.replace("Script_", "");
+
+            this.BindScript(scriptID, scriptClass);
+        }
+    }
+
+    /**
+     * @description: 注册脚本
+     * @param {string} scriptID
+     * @param {new} scriptClass
+     * @return {*}
+     */
+    private BindScript(scriptID: string, scriptClass: new (...args: any[]) => IScript): void {
+        if (scriptClass == null) {
+            LogUtility.Error(`scriptID_${scriptClass} class is null.`);
+            return;
+        }
+
+        if (this.mScriptClassMap.has(scriptID)) {
+            LogUtility.Warn(`scriptID_${scriptID} is exist.`);
+            return;
+        }
+
+        this.mScriptClassMap.set(scriptID, scriptClass);
+        LogUtility.Log(`bind scriptID_${scriptID} success.`);
     }
 
     /**

@@ -35,8 +35,12 @@ export abstract class SystemBase implements ISystem {
         this.GetAntNest().TriggerEvent(eventID, args);
     }
 
-    UnregitsterEvent(listenerID: string): void{
+    UnregitsterEvent(listenerID: string): void {
         this.GetAntNest().UnregitsterEvent(listenerID);
+    }
+
+    SendScript(ScriptID: string, params?: any[]): any {
+        return this.GetAntNest().SendScript(ScriptID, params);
     }
 
     private GetAntNest(): IAntNest {
