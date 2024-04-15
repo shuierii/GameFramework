@@ -5,6 +5,7 @@
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 import { SystemBase } from "../Abstract/SystemBase";
+import { EventID } from "../Const/EventID";
 import { SystemID } from "../Const/SystemID";
 import { LogUtility } from "../Utility/LogUtility";
 
@@ -24,5 +25,6 @@ export class TestSystem extends SystemBase {
 
     private Test(): void {
         LogUtility.Error("系统测试接口----------------hello world");
+        this.TriggerEvent(EventID.TEST_EVENT, ["TestSystem 触发事件 TEST_EVENT 事件"]);
     }
 }

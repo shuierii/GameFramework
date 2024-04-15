@@ -16,6 +16,9 @@ export abstract class AntNestBase implements IAntNest {
     // <模型ID，模型Class>
     private mModelClassMap: Map<number, new (...args: any[]) => IModel> = new Map();
 
+    // <事件，<监听者，处理回调>>
+    private mEventMap: Map<string, Map<string, (args?: any[]) => void>> = new Map();
+
     Init(): void {
         // 先初始化数据，再初始化系统，因为系统会用到数据
         this.InitModel();
@@ -104,6 +107,74 @@ export abstract class AntNestBase implements IAntNest {
         let modelObj = new modelClass();
 
         return modelObj as TModel;
+    }
+
+    /**
+     * @description: 注册事件
+     * @param {string} listenerID 监听者
+     * @param {string} eventID 事件
+     * @param {function} handle 事件回调
+     * @return {*}
+     */
+    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void {
+        // 没有此事件的记录
+        if (!this.mEventMap.has(eventID)) {
+            let map: Map<string, (args?: any[]) => void> = new Map();
+            map.set(listenerID, handle);
+
+            this.mEventMap.set(eventID, map);
+
+            LogUtility.Log(`the listenerID_(${listenerID}) , eventId_${eventID} rigister success.`);
+            return;
+        }
+
+        let listenerMap = this.mEventMap.get(eventID);
+        if (listenerMap.has(listenerID)) {
+            LogUtility.Warn(`the listenerID_(${listenerID}) , eventId_${eventID} has existed.`);
+            return;
+        }
+
+        listenerMap.set(listenerID, handle);
+
+        LogUtility.Log(`the listenerID_(${listenerID}) , eventId_${eventID} rigister success.`);
+    }
+
+    /**
+     * @description: 触发事件
+     * @param {string} eventID 事件
+     * @param {any} args 携带参数
+     * @return {*}
+     */
+    TriggerEvent(eventID: string, args?: any[]): void {
+        if (!this.mEventMap.has(eventID)) {
+            return;
+        }
+
+        let listenerMap = this.mEventMap.get(eventID);
+        for (const callBack of listenerMap.values()) {
+            if (callBack == null)
+                return;
+
+            callBack(args);
+        }
+    }
+
+    /**
+     * @description: 注销事件
+     * @param {string} listenerID 监听者
+     * @return {*}
+     */
+    UnregitsterEvent(listenerID: string): void {
+        let listenerMap = this.mEventMap.values();
+        for (const map of listenerMap) {
+            if (map == null)
+                continue;
+
+            if (!map.has(listenerID))
+                continue;
+
+            map.delete(listenerID);
+        }
     }
 
     /**

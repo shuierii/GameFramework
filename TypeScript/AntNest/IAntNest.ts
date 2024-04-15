@@ -40,4 +40,28 @@ export interface IAntNest extends IInitable, IReleasable {
      * @return {*}
      */
     GetModel<TModel extends IModel>(modelID: number): TModel;
+
+    /**
+     * @description: 注册事件
+     * @param {string} listenerID 监听者
+     * @param {string} eventID 事件
+     * @param {function} handle 事件回调
+     * @return {*}
+     */
+    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void;
+
+    /**
+     * @description: 触发事件
+     * @param {string} eventID 事件
+     * @param {any} args 携带参数
+     * @return {*}
+     */
+    TriggerEvent(eventID: string, args?: any[]): void;
+
+    /**
+     * @description: 注销事件
+     * @param {string} listenerID 监听者
+     * @return {*}
+     */
+    UnregitsterEvent(listenerID: string): void;
 }

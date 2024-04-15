@@ -9,6 +9,7 @@ import { ModelID } from "./Const/ModelID";
 import { SystemID } from "./Const/SystemID";
 import { MainGame } from "./MainGame";
 import { TestModel } from "./Model/TestModel";
+import { TestEventSystem } from "./System/TestEventSystem";
 import { TestSystem } from "./System/TestSystem";
 import { LogUtility } from "./Utility/LogUtility";
 
@@ -21,6 +22,7 @@ class TB_GameInstance extends UE.TS_GameInstance {
         LogUtility.Log("--------------------------------TB_GameInstance init");
 
         // 注册系统
+        MainGame.Instance.BindSystem(SystemID.TEST_EVENT_SYSTEM, TestEventSystem);
         MainGame.Instance.BindSystem(SystemID.TEST_SYSTEM, TestSystem);
 
         // 注册数据模型

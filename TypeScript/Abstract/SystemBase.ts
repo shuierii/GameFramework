@@ -27,6 +27,18 @@ export abstract class SystemBase implements ISystem {
         return this.GetAntNest().GetSystem<TSystem>(systemID);
     }
 
+    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void {
+        this.GetAntNest().RegisterEvent(listenerID, eventID, handle);
+    }
+
+    TriggerEvent(eventID: string, args?: any[]): void {
+        this.GetAntNest().TriggerEvent(eventID, args);
+    }
+
+    UnregitsterEvent(listenerID: string): void{
+        this.GetAntNest().UnregitsterEvent(listenerID);
+    }
+
     private GetAntNest(): IAntNest {
         return MainGame.Instance;
     }
