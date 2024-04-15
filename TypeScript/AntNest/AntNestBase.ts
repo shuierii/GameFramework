@@ -4,6 +4,8 @@
  * @Description:
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
+import { ObjectContainer } from "../Common/ObjectContainer";
+import { ObjectPool } from "../Common/ObjectPool";
 import { IModel } from "../Interface/IModel";
 import { IScript } from "../Interface/IScript";
 import { ISystem } from "../Interface/ISystem";
@@ -25,6 +27,12 @@ export abstract class AntNestBase implements IAntNest {
     // <脚本ID，脚本Class>
     private mScriptClassMap: Map<string, new (...args: any[]) => IScript> = new Map();
 
+    // 对象容器
+    private mObjectContainer: ObjectContainer = new ObjectContainer();
+
+    // 对象池
+    private mObjectPool: ObjectPool = new ObjectPool();
+
     Init(): void {
         // 注册所有脚本
         this.CollectScript();
@@ -40,6 +48,7 @@ export abstract class AntNestBase implements IAntNest {
         this.ReleaseModel();
 
         this.mSystemClassMap.clear();
+        this.mObjectContainer.Clear();
     }
 
     /**
@@ -69,6 +78,12 @@ export abstract class AntNestBase implements IAntNest {
      * @return {*}
      */
     GetSystem<TSystem extends ISystem>(systemID: number): TSystem {
+        // 1、有缓存对象
+        if (this.mObjectContainer.Contain(systemID)) {
+            return this.mObjectContainer.Get<TSystem>(systemID);
+        }
+
+        // 2、创建新对象
         if (!this.mSystemClassMap.has(systemID)) {
             LogUtility.Error(`systemID_${systemID} is not exist.`);
             return null;
@@ -76,6 +91,10 @@ export abstract class AntNestBase implements IAntNest {
 
         let systemClass = this.mSystemClassMap.get(systemID);
         let systemObj = new systemClass();
+
+        let ret = this.mObjectContainer.Register<ISystem>(systemID, systemObj);
+        if (!ret)
+            LogUtility.Error(`rigister systemID_${systemID}_obj failed.`)
 
         return systemObj as TSystem;
     }
@@ -107,6 +126,12 @@ export abstract class AntNestBase implements IAntNest {
      * @return {*}
      */
     GetModel<TModel extends IModel>(modelID: number): TModel {
+        // 1、有缓存对象
+        if (this.mObjectContainer.Contain(modelID)) {
+            return this.mObjectContainer.Get<TModel>(modelID);
+        }
+
+        // 2、创建新对象
         if (!this.mModelClassMap.has(modelID)) {
             LogUtility.Error(`modelID_${modelID} is not exist.`);
             return null;
@@ -114,6 +139,10 @@ export abstract class AntNestBase implements IAntNest {
 
         let modelClass = this.mModelClassMap.get(modelID);
         let modelObj = new modelClass();
+
+        let ret = this.mObjectContainer.Register<IModel>(modelID, modelObj);
+        if (!ret)
+            LogUtility.Error(`rigister modelID_${modelID}_obj failed.`)
 
         return modelObj as TModel;
     }
@@ -198,11 +227,18 @@ export abstract class AntNestBase implements IAntNest {
             return null;
         }
 
-        // 获取脚本
+        // 创建对象
         let scriptClass = this.mScriptClassMap.get(ScriptID);
-        let scriptObj = new scriptClass();
+        let scriptObj = this.mObjectPool.Spawn<IScript>(ScriptID, scriptClass);
+        if (scriptObj == null) {
+            LogUtility.Error(`ScriptID_${ScriptID} spawn failed.`);
+            return;
+        }
 
         let result = scriptObj.Excute(params);
+
+        // 执行完立马回收对象
+        this.mObjectPool.Recycle(ScriptID);
 
         return result;
     }

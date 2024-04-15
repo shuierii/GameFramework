@@ -9,6 +9,10 @@ import { IScript } from "../Interface/IScript";
 export abstract class ScriptBase implements IScript {
     protected abstract OnExcute(params?: any[]): any;
 
+    Reset(): void {
+
+    }
+
     Excute(params?: any[]): any {
         this.OnExcute(params);
     }
