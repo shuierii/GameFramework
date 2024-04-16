@@ -1,13 +1,13 @@
 /*
  * @Author: linb
- * @Date: 2024-04-12 16:27:31
+ * @Date: 2024-04-15 17:39:41
  * @Description:
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
-import { ICanGetModel } from "./ICanGetModel";
 import { IInitable } from "./IInitable";
+import { IRecycable } from "./IRecycable";
 import { IReleasable } from "./IReleasable";
 
-export interface IModel extends IInitable, IReleasable, ICanGetModel {
+export interface IComponent extends IInitable, IReleasable, IRecycable {
 
 }

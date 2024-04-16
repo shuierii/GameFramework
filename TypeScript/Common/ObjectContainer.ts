@@ -31,7 +31,7 @@ export class ObjectContainer {
      * @return {*}
      */
     Get<TObject extends Object>(objID: number): TObject {
-        if (this.mObjMap.has(objID))
+        if (!this.mObjMap.has(objID))
             return null;
 
         return this.mObjMap.get(objID) as TObject;

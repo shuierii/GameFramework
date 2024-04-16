@@ -224,7 +224,7 @@ export abstract class AntNestBase implements IAntNest {
     SendScript(ScriptID: string, params?: any[]): any {
         if (!this.mScriptClassMap.has(ScriptID)) {
             LogUtility.Error(`ScriptID_${ScriptID} is not exist.`);
-            return null;
+            return;
         }
 
         // 创建对象
@@ -238,7 +238,7 @@ export abstract class AntNestBase implements IAntNest {
         let result = scriptObj.Excute(params);
 
         // 执行完立马回收对象
-        this.mObjectPool.Recycle(ScriptID);
+        this.mObjectPool.Recycle(ScriptID, scriptObj);
 
         return result;
     }

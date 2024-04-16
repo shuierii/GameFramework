@@ -9,4 +9,5 @@ let INDEX = 1;
 export class SystemID {
     static TEST_SYSTEM: number = INDEX++;
     static TEST_EVENT_SYSTEM: number = INDEX++;
+    static ENTITY_SYSTEM: number = INDEX++;
 }

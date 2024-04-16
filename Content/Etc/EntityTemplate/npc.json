@@ -1,0 +1,6 @@
+{
+    "name": "npc",
+    "components": [
+        "character_movement"
+    ]
+}
