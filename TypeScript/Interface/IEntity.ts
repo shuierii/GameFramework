@@ -36,4 +36,11 @@ export interface IEntity extends IReleasable, IRecycable, IElement {
      * @return {*}
      */
     GetEntityType(): number;
+
+    /**
+     * @description: 读取实体数据
+     * @param {string} key
+     * @return {*}
+     */
+    ReadData(key: string): any;
 }

@@ -13,4 +13,8 @@ export interface IEntityData {
 
     // 该类型下的ID
     class_id: number;
+
+    Load(data: object): void;
+
+    ReadData(key: string): any;
 }

@@ -23,6 +23,8 @@ export class Entity extends ElementBase implements IEntity {
     // <组件类型，组件对象>
     private mComponentMap: Map<string, IComponent> = new Map();
 
+    private mEntityData: IEntityData;
+
     /**
      * @description: 初始化数据
      * @param {IEntityData} entityData
@@ -39,6 +41,8 @@ export class Entity extends ElementBase implements IEntity {
         this.mUID = entityData.uid;
         this.mEntityType = entityData.entity_type;
         this.mClassID = entityData.class_id;
+
+        this.mEntityData = entityData;
 
         let entitySys = this.GetSystem<IEntitySystem>(SystemID.ENTITY_SYSTEM);
 
@@ -102,5 +106,14 @@ export class Entity extends ElementBase implements IEntity {
      */
     GetEntityType(): number {
         return this.mEntityType;
+    }
+
+    /**
+     * @description: 读取实体数据
+     * @param {string} key
+     * @return {*}
+     */
+    ReadData(key: string): any {
+        return this.mEntityData.ReadData(key);
     }
 }

@@ -80,6 +80,8 @@ export class EntitySystem extends SystemBase implements IEntitySystem {
         switch (entityType) {
             case CommonEnum.EntityType.NPC:
                 return entityModel.GetEntityTemplate("npc");
+            case CommonEnum.EntityType.PLAYER:
+                return entityModel.GetEntityTemplate("player");
         }
     }
 }

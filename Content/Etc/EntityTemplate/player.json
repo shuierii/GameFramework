@@ -1,0 +1,6 @@
+{
+    "name": "player",
+    "components": [
+        "character_movement"
+    ]
+}

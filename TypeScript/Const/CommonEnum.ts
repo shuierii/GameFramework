@@ -8,6 +8,7 @@
 export module CommonEnum {
     export enum EntityType {
         NONE,
+        PLAYER,
         NPC,
     }
 }
