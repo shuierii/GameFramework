@@ -11,4 +11,5 @@ export class ModelID {
     static TEST_MODEL: number = VALUE++;
     static ENTITY_MODEL: number = VALUE++;
     static PLAYER_MODEL: number = VALUE++;
+    static EVENT_MODEL: number = VALUE++;
 }

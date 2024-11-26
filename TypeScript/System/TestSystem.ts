@@ -13,6 +13,7 @@ import { SystemID } from "../Const/SystemID";
 import { IEntityData } from "../Data/IEntityData";
 import { IPlayerModel } from "../Model/Player/IPlayerModel";
 import { LogUtility } from "../Utility/LogUtility";
+import { TickUtility } from "../Utility/TickUtility";
 import { IEntitySystem } from "./Entity/IEntitySystem";
 import { IPlayerSystem } from "./Player/IPlayerSystem";
 
@@ -25,10 +26,12 @@ export class TestSystem extends SystemBase {
         this.Test();
         this.TestEntityFunc();
         this.TestPlayerFunc();
+        TickUtility.RegisterTick("TestSystem", this.TestTick.bind(this));
         LogUtility.Log(`TestSystem init success.`);
     }
 
     protected OnRelease(): void {
+        TickUtility.UnRegisterTick("TestSystem");
         LogUtility.Log(`TestSystem release success.`);
     }
 
@@ -75,5 +78,9 @@ export class TestSystem extends SystemBase {
         let player = entitySys.CreateEntity(playerData);
         if (player)
             LogUtility.Error(`创建玩家实体 uid:${player.GetUID()} entity_type:${player.GetEntityType()} class_id:${player.GetClassID()} name:${player.ReadData("name")} success`);
+    }
+
+    private TestTick(delta: number): void {
+        LogUtility.Error(`tick测试 delta(${delta})`);
     }
 }
