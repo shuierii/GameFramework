@@ -6,7 +6,7 @@
  */
 import { ObjectContainer } from "../Common/ObjectContainer";
 import { ObjectPool } from "../Common/ObjectPool";
-import { EventArgsBase, IEvent } from "../Const/EventID";
+import { IEvent } from "../Const/EventID";
 import { IModel } from "../Interface/IModel";
 import { IScript } from "../Interface/IScript";
 import { ISystem } from "../Interface/ISystem";

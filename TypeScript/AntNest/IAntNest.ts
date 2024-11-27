@@ -4,14 +4,8 @@
  * @Description:
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
-/*
- * @Author: linb
- * @Date: 2024-04-12 10:29:48
- * @Description:
- * @Copyright: Copyright HuanMos. All Rights Reserved.
- */
 
-import { EventArgsBase, IEvent } from "../Const/EventID";
+import { IEvent } from "../Const/EventID";
 import { IInitable } from "../Interface/IInitable";
 import { IModel } from "../Interface/IModel";
 import { IReleasable } from "../Interface/IReleasable";
