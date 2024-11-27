@@ -11,6 +11,7 @@
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 
+import { EventArgsBase, IEvent } from "../Const/EventID";
 import { IInitable } from "../Interface/IInitable";
 import { IModel } from "../Interface/IModel";
 import { IReleasable } from "../Interface/IReleasable";
@@ -49,20 +50,19 @@ export interface IAntNest extends IInitable, IReleasable {
 
     /**
      * @description: 注册事件
-     * @param {string} listenerID 监听者
-     * @param {string} eventID 事件
-     * @param {function} handle 事件回调
+     * @param {*} IEvent
+     * @param {function} handle
      * @return {*}
      */
-    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void;
+    RegisterEvent(listenerID: string, eventClass: new (...args: any[]) => IEvent, handle: (arg?: IEvent) => void): void;
 
     /**
      * @description: 触发事件
-     * @param {string} eventID 事件
-     * @param {any} args 携带参数
+     * @param {new} eventClass
+     * @param {any} args
      * @return {*}
      */
-    TriggerEvent(eventID: string, args?: any[]): void;
+    TriggerEvent(eventClass: new (...args: any[]) => IEvent, arg?: IEvent): void;
 
     /**
      * @description: 注销事件

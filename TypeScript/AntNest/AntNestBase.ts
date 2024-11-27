@@ -6,6 +6,7 @@
  */
 import { ObjectContainer } from "../Common/ObjectContainer";
 import { ObjectPool } from "../Common/ObjectPool";
+import { EventArgsBase, IEvent } from "../Const/EventID";
 import { IModel } from "../Interface/IModel";
 import { IScript } from "../Interface/IScript";
 import { ISystem } from "../Interface/ISystem";
@@ -22,7 +23,7 @@ export abstract class AntNestBase implements IAntNest {
     private mModelClassMap: Map<number, new (...args: any[]) => IModel> = new Map();
 
     // <事件，<监听者，处理回调>>
-    private mEventMap: Map<string, Map<string, (args?: any[]) => void>> = new Map();
+    private mEventMap: Map<string, Map<string, (args?: any) => void>> = new Map();
 
     // <脚本ID，脚本Class>
     private mScriptClassMap: Map<string, new (...args: any[]) => IScript> = new Map();
@@ -149,15 +150,19 @@ export abstract class AntNestBase implements IAntNest {
 
     /**
      * @description: 注册事件
-     * @param {string} listenerID 监听者
-     * @param {string} eventID 事件
-     * @param {function} handle 事件回调
+     * @param {*} IEvent
+     * @param {function} handle
      * @return {*}
      */
-    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void {
+    RegisterEvent(listenerID: string, eventClass: new (...args: any[]) => IEvent, handle: (arg?: IEvent) => void): void {
+        if (eventClass == null)
+            return;
+
+        let eventID = eventClass.name;
+
         // 没有此事件的记录
         if (!this.mEventMap.has(eventID)) {
-            let map: Map<string, (args?: any[]) => void> = new Map();
+            let map: Map<string, (args?: any) => void> = new Map();
             map.set(listenerID, handle);
 
             this.mEventMap.set(eventID, map);
@@ -179,11 +184,16 @@ export abstract class AntNestBase implements IAntNest {
 
     /**
      * @description: 触发事件
-     * @param {string} eventID 事件
-     * @param {any} args 携带参数
+     * @param {new} eventClass
+     * @param {any} args
      * @return {*}
      */
-    TriggerEvent(eventID: string, args?: any[]): void {
+    TriggerEvent(eventClass: new (...args: any[]) => IEvent, arg?: IEvent): void {
+        if (eventClass == null)
+            return;
+
+        let eventID = eventClass.name;
+
         if (!this.mEventMap.has(eventID)) {
             return;
         }
@@ -193,7 +203,7 @@ export abstract class AntNestBase implements IAntNest {
             if (callBack == null)
                 return;
 
-            callBack(args);
+            callBack(arg);
         }
     }
 

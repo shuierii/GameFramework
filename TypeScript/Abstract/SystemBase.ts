@@ -6,6 +6,7 @@
  */
 import { AntNestBase } from "../AntNest/AntNestBase";
 import { IAntNest } from "../AntNest/IAntNest";
+import { IEvent } from "../Const/EventID";
 import { IModel } from "../Interface/IModel";
 import { ISystem } from "../Interface/ISystem";
 import { MainGame } from "../MainGame";
@@ -32,12 +33,12 @@ export abstract class SystemBase implements ISystem {
         return this.GetAntNest().GetModel<TModel>(modelID);
     }
 
-    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void {
-        this.GetAntNest().RegisterEvent(listenerID, eventID, handle);
+    RegisterEvent<TEvent extends IEvent>(listenerID: string, eventClass: new (...args: any[]) => TEvent, handle: (arg?: TEvent) => void): void {
+        this.GetAntNest().RegisterEvent(listenerID, eventClass, handle);
     }
 
-    TriggerEvent(eventID: string, args?: any[]): void {
-        this.GetAntNest().TriggerEvent(eventID, args);
+    TriggerEvent<TEvent extends IEvent>(eventClass: new (...args: any[]) => TEvent, arg?: TEvent): void {
+        this.GetAntNest().TriggerEvent(eventClass, arg);
     }
 
     UnregitsterEvent(listenerID: string): void {

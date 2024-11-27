@@ -5,8 +5,10 @@
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 
+import { IEvent } from "../Const/EventID";
+
 export interface ICanRigisterEvent {
-    RegisterEvent(listenerID: string, eventID: string, handle: (args?: any[]) => void): void;
+    RegisterEvent<TEvent extends IEvent>(listenerID: string, eventClass: new (...args: any[]) => TEvent, handle: (arg?: TEvent) => void): void;
 
     UnregitsterEvent(listenerID: string): void;
 }

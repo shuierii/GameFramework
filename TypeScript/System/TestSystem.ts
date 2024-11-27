@@ -7,7 +7,7 @@
 import { SystemBase } from "../Abstract/SystemBase";
 import { CommonConst } from "../Const/CommonConst";
 import { CommonEnum } from "../Const/CommonEnum";
-import { EventID } from "../Const/EventID";
+import { Event_Test } from "../Const/EventID";
 import { ModelID } from "../Const/ModelID";
 import { SystemID } from "../Const/SystemID";
 import { IEntityData } from "../Data/IEntityData";
@@ -37,7 +37,7 @@ export class TestSystem extends SystemBase {
 
     private Test(): void {
         LogUtility.Error("系统测试接口----------------hello world");
-        this.TriggerEvent(EventID.TEST_EVENT, ["TestSystem 触发事件 TEST_EVENT 事件"]);
+        this.TriggerEvent(Event_Test.EVENT_TEST, { content: "事件触发重构：TestSystem 触发事件 TEST_EVENT 事件" });
         this.SendScript("test", ["TestSystem 执行 test 脚本"]);
     }
 

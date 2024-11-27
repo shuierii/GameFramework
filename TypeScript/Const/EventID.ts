@@ -1,5 +1,21 @@
+/*
+ * @Author: linb
+ * @Date: 2024-10-31 18:04:28
+ * @Description:
+ * @Copyright: Copyright HuanMos. All Rights Reserved.
+ */
 
-export class EventID {
+export interface IEvent {
+
+}
+
+export abstract class EventBase implements IEvent {
+
+}
+
+export module Event_Test {
     // 测试事件
-    static TEST_EVENT = "test_event";
+    export class EVENT_TEST extends EventBase {
+        content: string;
+    }
 }

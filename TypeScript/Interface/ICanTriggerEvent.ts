@@ -5,6 +5,8 @@
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 
+import { IEvent } from "../Const/EventID";
+
 export interface ICanTriggerEvent {
-    TriggerEvent(eventID: string, args?: any[]): void;
+    TriggerEvent<TEvent extends IEvent>(eventClass: new (...args: any[]) => TEvent, arg?: TEvent): void;
 }
