@@ -23,6 +23,6 @@ export class TestModel extends ModelBase {
     }
 
     private Test(): void {
-        LogUtility.Error("数据模型测试接口----------------hello world");
+        LogUtility.Log("数据模型测试接口----------------hello world");
     }
 }

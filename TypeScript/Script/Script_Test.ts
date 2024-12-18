@@ -16,7 +16,7 @@ export class Script_Test {
 
 export module ScriptSet_Test {
     export class Script_test extends ScriptBase {
-        protected OnExcute(params?: any[]) {
+        protected OnExecute(params?: any[]) {
             let content = params[0] as string;
 
             LogUtility.Log(`触发测试脚本 ${content}`);

@@ -245,7 +245,7 @@ export abstract class AntNestBase implements IAntNest {
             return;
         }
 
-        let result = scriptObj.Excute(params);
+        let result = scriptObj.Execute(params);
 
         // 执行完立马回收对象
         this.mObjectPool.Recycle(ScriptID, scriptObj);

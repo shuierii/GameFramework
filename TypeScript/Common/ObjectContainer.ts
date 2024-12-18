@@ -1,7 +1,7 @@
 /*
  * @Author: linb
  * @Date: 2024-04-15 16:29:51
- * @Description:
+ * @Description: 对象容器(不回收，游戏结束清空)(系统、数据模型)
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 

@@ -7,5 +7,5 @@ import { IRecycable } from "./IRecycable";
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
 export interface IScript extends IRecycable {
-    Excute(params?: any[]): any;
+    Execute(params?: any[]): any;
 }

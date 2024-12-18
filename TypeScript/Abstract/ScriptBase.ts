@@ -7,13 +7,16 @@
 import { IScript } from "../Interface/IScript";
 
 export abstract class ScriptBase implements IScript {
-    protected abstract OnExcute(params?: any[]): any;
+    // 对象类型
+    mType: string;
+
+    protected abstract OnExecute(params?: any[]): any;
 
     Reset(): void {
 
     }
 
-    Excute(params?: any[]): any {
-        this.OnExcute(params);
+    Execute(params?: any[]): any {
+        this.OnExecute(params);
     }
 }

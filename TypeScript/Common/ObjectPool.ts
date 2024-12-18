@@ -1,12 +1,13 @@
-import { IRecycable } from "../Interface/IRecycable";
-import { LogUtility } from "../Utility/LogUtility";
-
 /*
  * @Author: linb
  * @Date: 2024-04-15 15:58:38
- * @Description:
+ * @Description: 对象池(回收重置对象，结束游戏清空)(实体、节点)
  * @Copyright: Copyright HuanMos. All Rights Reserved.
  */
+
+import { IRecycable } from "../Interface/IRecycable";
+import { LogUtility } from "../Utility/LogUtility";
+
 export class ObjectPool {
 
     // <对象类型，对象class>

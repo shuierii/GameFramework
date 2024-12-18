@@ -7,6 +7,8 @@
 import { IComponent } from "../Interface/IComponent";
 
 export abstract class ComponentBase implements IComponent {
+    // 对象类型
+    mType: string;
 
     protected abstract OnInit(): void;
     protected abstract OnRelease(): void;

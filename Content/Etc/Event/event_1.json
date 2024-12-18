@@ -1,0 +1,70 @@
+{
+    "type": "E_DialogEvent",
+    "properties": {},
+    "input_list": [
+        {
+            "type": "EI_GetPlayerA",
+            "properties": {},
+            "input_list": [],
+            "output_list": [],
+            "field": "角色A"
+        },
+        {
+            "type": "EI_GetPlayerB",
+            "properties": {},
+            "input_list": [],
+            "output_list": [],
+            "field": "角色B"
+        }
+    ],
+    "output_list": [],
+    "id": 1,
+    "trigger_list": [
+        {
+            "type": "ET_Test",
+            "properties": {},
+            "input_list": [],
+            "output_list": []
+        }
+    ],
+    "script_list": [
+        {
+            "type": "E_Script",
+            "properties": {},
+            "input_list": [],
+            "output_list": [],
+            "dialog_list": [
+                {
+                    "type": "E_Dialog",
+                    "dialog_id": "scence_1",
+                    "talk_content": "现在正在测试对话编辑器，接下来请你选择要测试的选项",
+                    "properties": {},
+                    "input_list": [
+                        {
+                            "type": "EI_GetPlayerA",
+                            "properties": {},
+                            "input_list": [],
+                            "output_list": [],
+                            "field": "说话人"
+                        }
+                    ],
+                    "output_list": [],
+                    "option_list": [
+                        {
+                            "option_id": "选项1",
+                            "option_content": "不错"
+                        },
+                        {
+                            "option_id": "选项2",
+                            "option_content": "还行"
+                        },
+                        {
+                            "option_id": "选项3",
+                            "option_content": "结束吧"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

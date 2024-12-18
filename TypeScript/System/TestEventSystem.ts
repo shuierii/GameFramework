@@ -16,6 +16,9 @@ export class TestEventSystem extends SystemBase {
 
     protected OnInit(): void {
         this.RegisterEvent("TestEventSystem", Event_Test.EVENT_TEST, this.Test.bind(this));
+
+        // 执行对话
+        this.RegisterEvent("TestEventSystem", Event_Test.EVENT_EXECUTE_TALK, this.ShowDialogContent.bind(this));
     }
 
     protected OnRelease(): void {
@@ -24,5 +27,31 @@ export class TestEventSystem extends SystemBase {
 
     private Test(args: Event_Test.EVENT_TEST): void {
         LogUtility.Log(`触发事件操作 ${args.content}`);
+
+        this.TriggerEvent(Event_Test.EVENT_TRIGGER_DIALOG);
+    }
+
+    private ShowDialogContent(args: Event_Test.EVENT_EXECUTE_TALK): void {
+        let dialog = args.dialog;
+        if (dialog == null)
+            return;
+
+        LogUtility.Log(`===对话内容===`);
+
+        let talker = dialog.GetTalker();
+        let content = dialog.GetDialogContent();
+        let optionIDList = dialog.GetOptionIDList();
+
+        let optionText = "";
+        for (const optionID of optionIDList) {
+            optionText += `${optionID}:`
+            let optionContent = dialog.GetOptionTextByID(optionID);
+            optionText += optionContent;
+            optionText += `\n`;
+        }
+
+        LogUtility.Info(`${talker}:\n${content}\n${optionText}`);
+
+        LogUtility.Log(`===END===`);
     }
 }

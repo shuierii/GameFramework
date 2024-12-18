@@ -26,17 +26,17 @@ export class TestSystem extends SystemBase {
         this.Test();
         this.TestEntityFunc();
         this.TestPlayerFunc();
-        TickUtility.RegisterTick("TestSystem", this.TestTick.bind(this));
+        // TickUtility.RegisterTick("TestSystem", this.TestTick.bind(this));
         LogUtility.Log(`TestSystem init success.`);
     }
 
     protected OnRelease(): void {
-        TickUtility.UnRegisterTick("TestSystem");
+        // TickUtility.UnRegisterTick("TestSystem");
         LogUtility.Log(`TestSystem release success.`);
     }
 
     private Test(): void {
-        LogUtility.Error("系统测试接口----------------hello world");
+        LogUtility.Log("系统测试接口----------------hello world");
         this.TriggerEvent(Event_Test.EVENT_TEST, { content: "事件触发重构：TestSystem 触发事件 TEST_EVENT 事件" });
         this.SendScript("test", ["TestSystem 执行 test 脚本"]);
     }
@@ -57,7 +57,7 @@ export class TestSystem extends SystemBase {
         // 创建实体
         let entity = entitySys.CreateEntity(IEntityData);
         if (entity)
-            LogUtility.Error(`创建实体 uid:${entity.GetUID()} entity_type:${entity.GetEntityType()} class_id:${entity.GetClassID()} success`);
+            LogUtility.Log(`创建实体 uid:${entity.GetUID()} entity_type:${entity.GetEntityType()} class_id:${entity.GetClassID()} success`);
     }
 
     private TestPlayerFunc(): void {
@@ -77,7 +77,7 @@ export class TestSystem extends SystemBase {
         // 创建实体
         let player = entitySys.CreateEntity(playerData);
         if (player)
-            LogUtility.Error(`创建玩家实体 uid:${player.GetUID()} entity_type:${player.GetEntityType()} class_id:${player.GetClassID()} name:${player.ReadData("name")} success`);
+            LogUtility.Log(`创建玩家实体 uid:${player.GetUID()} entity_type:${player.GetEntityType()} class_id:${player.GetClassID()} name:${player.ReadData("name")} success`);
     }
 
     private TestTick(delta: number): void {

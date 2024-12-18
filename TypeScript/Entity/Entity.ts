@@ -13,6 +13,9 @@ import { IEntitySystem } from "../System/Entity/IEntitySystem";
 import { LogUtility } from "../Utility/LogUtility";
 
 export class Entity extends ElementBase implements IEntity {
+    // 对象类型
+    mType: string;
+
     // 唯一ID
     private mUID: string;
 
