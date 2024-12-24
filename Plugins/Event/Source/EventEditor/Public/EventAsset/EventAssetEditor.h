@@ -15,10 +15,7 @@ public:
 	virtual FLinearColor GetWorldCentricTabColorScale() const override;
 	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
 	virtual void UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
-
-	// NotifyHook
-
-	// EditorUndoClient
+	// END
 
 public:
 	void InitEventAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UObject* ObjectToEditor);
@@ -29,6 +26,10 @@ private:
 	TSharedRef<SGraphEditor> CreateGraphWidget(); // 创建图表面板
 	void BindGraphCommands(); // 绑定图标操作指令，如复制等
 
+	TSharedRef<SDockTab> SpawnTab_Details(const FSpawnTabArgs& Args) const;
+	TSharedRef<SDockTab> SpawnTab_GraphCanvas(const FSpawnTabArgs& Args) const;
+	TSharedRef<SDockTab> SpawnTab_Palette(const FSpawnTabArgs& Args) const;
+
 public:
 	static const FName GraphTab;
 	static const FName DetailsTab;
@@ -37,4 +38,5 @@ public:
 private:
 	UEventAsset* EventAsset;
 	TSharedPtr<IDetailsView> DetailsView;
+	TSharedPtr<SGraphEditor> FocusedGraphEditor;
 };

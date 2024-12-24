@@ -70,7 +70,7 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 void FEventAssetEditor::CreateWidgets()
 {
 	// 图标编辑面板
-	CreateGraphWidget();
+	FocusedGraphEditor = CreateGraphWidget();
 
 	// 细节面板
 	FDetailsViewArgs Args;
@@ -125,6 +125,43 @@ void FEventAssetEditor::BindGraphCommands()
 {
 }
 
+TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_Details(const FSpawnTabArgs& Args) const
+{
+	check(Args.GetTabId() == DetailsTab);
+
+	return SNew(SDockTab)
+		.Icon(FEditorStyle::GetBrush("LevelEditor.Tabs.Details"))
+		.Label(LOCTEXT("EventDetailsTitle", "细节"))
+	[
+		DetailsView.ToSharedRef()
+	];
+}
+
+TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_GraphCanvas(const FSpawnTabArgs& Args) const
+{
+	check(Args.GetTabId() == GraphTab);
+
+	TSharedRef<SDockTab> SpawnedTab = SNew(SDockTab)
+		.Label(LOCTEXT("EventGraphTitle", "图表"));
+
+	if (FocusedGraphEditor.IsValid())
+	{
+		SpawnedTab->SetContent(FocusedGraphEditor.ToSharedRef());
+	}
+
+	return SpawnedTab;
+}
+
+TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_Palette(const FSpawnTabArgs& Args) const
+{
+	check(Args.GetTabId() == PaletteTab);
+
+	return SNew(SDockTab)
+	.Icon(FEditorStyle::GetBrush("Kismet.Tabs.Palette"))
+	.Label(LOCTEXT("EventPaletteTitle", "节点列表"));
+	// TODO
+}
+
 FEventAssetEditor::FEventAssetEditor(): EventAsset(nullptr)
 {
 }
@@ -160,33 +197,17 @@ void FEventAssetEditor::RegisterTabSpawners(const TSharedRef<FTabManager>& InTab
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(LOCTEXT("WorkspaceMenu_EventAssetEditor", "Event Editor"));
 	const auto WorkspaceMenuCategoryRef = WorkspaceMenuCategory.ToSharedRef();
 
-	InTabManager->RegisterTabSpawner(GraphTab, FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args)
-	            {
-		            return SNew(SDockTab).Label(LOCTEXT("EventGraphTitle", "图表"));
-	            }))
+	InTabManager->RegisterTabSpawner(GraphTab, FOnSpawnTab::CreateSP(this, &FEventAssetEditor::SpawnTab_GraphCanvas))
 	            .SetDisplayName(LOCTEXT("GraphTab", "图表"))
 	            .SetGroup(WorkspaceMenuCategoryRef)
 	            .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "GraphEditor.EventGraph_16x"));
 
-	InTabManager->RegisterTabSpawner(DetailsTab, FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args)
-	            {
-		            return SNew(SDockTab)
-							.Icon(FEditorStyle::GetBrush("LevelEditor.Tabs.Details"))
-							.Label(LOCTEXT("EventDetailsTitle", "细节"))
-							[
-								DetailsView.ToSharedRef()
-							];
-	            }))
+	InTabManager->RegisterTabSpawner(DetailsTab, FOnSpawnTab::CreateSP(this, &FEventAssetEditor::SpawnTab_Details))
 	            .SetDisplayName(LOCTEXT("DetailsTab", "细节"))
 	            .SetGroup(WorkspaceMenuCategoryRef)
 	            .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
 
-	InTabManager->RegisterTabSpawner(PaletteTab, FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs& Args)
-	            {
-		            return SNew(SDockTab)
-							.Icon(FEditorStyle::GetBrush("Kismet.Tabs.Palette"))
-							.Label(LOCTEXT("EventPaletteTitle", "节点列表"));
-	            }))
+	InTabManager->RegisterTabSpawner(PaletteTab, FOnSpawnTab::CreateSP(this, &FEventAssetEditor::SpawnTab_Palette))
 	            .SetDisplayName(LOCTEXT("PaletteTab", "节点列表"))
 	            .SetGroup(WorkspaceMenuCategoryRef)
 	            .SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "Kismet.Tabs.Palette"));
