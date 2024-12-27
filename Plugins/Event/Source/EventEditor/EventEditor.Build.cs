@@ -26,7 +26,9 @@ public class EventEditor : ModuleRules
 				"GraphEditor",
 				"PropertyEditor",
 				"EditorStyle",
-				"ToolMenus"
+				"ToolMenus",
+				"KismetWidgets",
+				"Projects"
 			}
 		);
 	}

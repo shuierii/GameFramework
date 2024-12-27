@@ -12,4 +12,6 @@ class EVENTEDITOR_API UEventGraph : public UEdGraph
 
 public:
 	static UEdGraph* CreateGraph(UEventAsset* InEventAsset);
+
+	UEventAsset* GetEventAsset() const;	// 获取当前表绑定的事件资产
 };

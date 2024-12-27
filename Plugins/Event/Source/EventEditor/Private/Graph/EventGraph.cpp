@@ -12,3 +12,8 @@ UEdGraph* UEventGraph::CreateGraph(UEventAsset* InEventAsset)
 
 	return NewGraph;
 }
+
+UEventAsset* UEventGraph::GetEventAsset() const
+{
+	return CastChecked<UEventAsset>(GetOuter());
+}

@@ -2,6 +2,7 @@
 
 #include "EventAsset.h"
 #include "ToolMenus.h"
+#include "Graph/EventGraphSchema.h"
 
 #define LOCTEXT_NAMESPACE "FEventAssetEditor"
 
@@ -17,7 +18,7 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 	CreateWidgets();
 
 	// 绑定指令
-
+	UEventGraphSchema::BindAssetChangeActions();
 
 	// 工具栏
 	CreateToolbar();
