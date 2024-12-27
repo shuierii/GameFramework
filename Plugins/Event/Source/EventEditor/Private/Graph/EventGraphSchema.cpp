@@ -1,9 +1,12 @@
 ﻿#include "Graph/EventGraphSchema.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Blueprint/Blueprint_EventNode_Precondition.h"
 #include "Blueprint/Blueprint_EventNode_Trigger.h"
 #include "Graph/EventGraphSchemaActions.h"
+#include "Graph/Node/EdGraphNode_Precondition.h"
 #include "Graph/Node/EdGraphNode_Trigger.h"
+#include "Node/EventNode_Precondition.h"
 #include "Node/EventNode_Trigger.h"
 
 #define LOCTEXT_NAMESPACE "UEventGraphSchema"
@@ -104,6 +107,11 @@ void UEventGraphSchema::GatherEventNodes()
 
 		// Trigger
 		AssignedEdGraphNodeClasses.Emplace(UEventNode_Trigger::StaticClass(), UEdGraphNode_Trigger::StaticClass());
+
+		// Precondition
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_Precondition::StaticClass(), UEdGraphNode_Precondition::StaticClass());
+
+		UE_LOG(LogTemp, Log, TEXT("绑定节点类和编辑节点类"));
 	}
 
 	// 加载已有的节点资产进列表
@@ -137,7 +145,8 @@ void UEventGraphSchema::OnAssetAdded(const FAssetData& AssetData)
 		}
 
 		auto ChildClass = AssetData.GetClass();
-		if (ChildClass->IsChildOf(UBlueprint_EventNode_Trigger::StaticClass()))
+		if (ChildClass->IsChildOf(UBlueprint_EventNode_Trigger::StaticClass())
+			|| ChildClass->IsChildOf(UBlueprint_EventNode_Precondition::StaticClass()))
 		{
 			BlueprintEventNodes.Emplace(AssetData.PackageName, AssetData);
 

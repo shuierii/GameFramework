@@ -65,6 +65,8 @@ void FEventEditorModule::RegisterAsset()
 	TSharedPtr<IAssetTypeActions> AssetTypeActions_Output = MakeShareable(new FAssetTypeActions_Output());
 	AssetTools.RegisterAssetTypeActions(AssetTypeActions_Output.ToSharedRef());
 	RegisteredAssetActionsArr.Add(AssetTypeActions_Output);
+	
+	UE_LOG(LogTemp, Log, TEXT("FEventEditorModule::RegisterAsset 注册资产"));
 }
 
 void FEventEditorModule::UnregisterAsset()

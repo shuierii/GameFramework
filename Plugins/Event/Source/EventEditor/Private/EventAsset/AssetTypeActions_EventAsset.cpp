@@ -7,7 +7,7 @@
 
 FText FAssetTypeActions_EventAsset::GetName() const
 {
-	return LOCTEXT("FAssetTypeAction_EventAsset_Name", "Event Asset");
+	return LOCTEXT("FAssetTypeAction_EventAsset_Name", "事件");
 }
 
 FColor FAssetTypeActions_EventAsset::GetTypeColor() const
@@ -29,6 +29,8 @@ void FAssetTypeActions_EventAsset::OpenAssetEditor(const TArray<UObject*>& InObj
 {
 	const EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid() ? EToolkitMode::WorldCentric : EToolkitMode::Standalone;
 
+	UE_LOG(LogTemp, Log, TEXT("打开编辑器"));
+	
 	// InObjects 是指由哪个资产点击打开的
 	for (auto ObjIt = InObjects.CreateConstIterator(); ObjIt; ++ObjIt)
 	{

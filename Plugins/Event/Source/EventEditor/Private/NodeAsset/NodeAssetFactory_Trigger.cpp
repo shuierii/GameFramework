@@ -4,7 +4,7 @@
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Node/EventNode_Trigger.h"
 
-#define LOCTEXT_NAMESPACE "UEventNodeFactory_Trigger"
+#define LOCTEXT_NAMESPACE "UNodeAssetFactory_Trigger"
 
 UNodeAssetFactory_Trigger::UNodeAssetFactory_Trigger(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
 {
@@ -29,6 +29,8 @@ UObject* UNodeAssetFactory_Trigger::FactoryCreateNew(UClass* InClass, UObject* I
 
 	UBlueprint_EventNode_Trigger* NewBP = CastChecked<UBlueprint_EventNode_Trigger>(FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, InName, BPTYPE_Normal, UBlueprint_EventNode_Trigger::StaticClass(), UBlueprintGeneratedClass::StaticClass()));
 
+	UE_LOG(LogTemp, Log, TEXT("创建资产：触发器"));
+	
 	return NewBP;
 }
 

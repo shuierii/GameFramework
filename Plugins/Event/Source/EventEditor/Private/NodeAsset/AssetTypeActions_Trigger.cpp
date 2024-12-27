@@ -7,7 +7,7 @@
 
 FText FAssetTypeActions_Trigger::GetName() const
 {
-	return LOCTEXT("FAssetTypeActions_Trigger_Name", "Trigger");
+	return LOCTEXT("FAssetTypeActions_Trigger_Name", "触发器");
 }
 
 uint32 FAssetTypeActions_Trigger::GetCategories()
