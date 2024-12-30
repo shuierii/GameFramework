@@ -1,11 +1,17 @@
 ﻿#include "Graph/EventGraphSchema.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Blueprint/Blueprint_EventNode_Input.h"
+#include "Blueprint/Blueprint_EventNode_Output.h"
 #include "Blueprint/Blueprint_EventNode_Precondition.h"
 #include "Blueprint/Blueprint_EventNode_Trigger.h"
 #include "Graph/EventGraphSchemaActions.h"
+#include "Graph/Node/EdGraphNode_Input.h"
+#include "Graph/Node/EdGraphNode_Output.h"
 #include "Graph/Node/EdGraphNode_Precondition.h"
 #include "Graph/Node/EdGraphNode_Trigger.h"
+#include "Node/EventNode_Input.h"
+#include "Node/EventNode_Output.h"
 #include "Node/EventNode_Precondition.h"
 #include "Node/EventNode_Trigger.h"
 
@@ -111,6 +117,12 @@ void UEventGraphSchema::GatherEventNodes()
 		// Precondition
 		AssignedEdGraphNodeClasses.Emplace(UEventNode_Precondition::StaticClass(), UEdGraphNode_Precondition::StaticClass());
 
+		// Input
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_Input::StaticClass(), UEdGraphNode_Input::StaticClass());
+
+		// Output
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_Output::StaticClass(), UEdGraphNode_Output::StaticClass());
+
 		UE_LOG(LogTemp, Log, TEXT("绑定节点类和编辑节点类"));
 	}
 
@@ -146,7 +158,9 @@ void UEventGraphSchema::OnAssetAdded(const FAssetData& AssetData)
 
 		auto ChildClass = AssetData.GetClass();
 		if (ChildClass->IsChildOf(UBlueprint_EventNode_Trigger::StaticClass())
-			|| ChildClass->IsChildOf(UBlueprint_EventNode_Precondition::StaticClass()))
+			|| ChildClass->IsChildOf(UBlueprint_EventNode_Precondition::StaticClass())
+			|| ChildClass->IsChildOf(UBlueprint_EventNode_Input::StaticClass())
+			|| ChildClass->IsChildOf(UBlueprint_EventNode_Output::StaticClass()))
 		{
 			BlueprintEventNodes.Emplace(AssetData.PackageName, AssetData);
 
