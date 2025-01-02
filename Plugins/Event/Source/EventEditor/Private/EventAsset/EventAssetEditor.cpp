@@ -18,10 +18,12 @@ const FName FEventAssetEditor::PaletteTab = FName(TEXT("Palette"));
 
 void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UObject* ObjectToEditor)
 {
-
 	UE_LOG(LogTemp, Log, TEXT("初始化编辑器"));
-	
+
 	EventAsset = CastChecked<UEventAsset>(ObjectToEditor);
+
+	// 注册引脚连接委托
+	UEventGraphSchema::OnPinConnection.BindSP(this, &FEventAssetEditor::OnPinConnectionFunc);
 
 	// 创建编辑器界面
 	CreateWidgets();
@@ -197,6 +199,10 @@ void FEventAssetEditor::BindGraphCommands()
 	UE_LOG(LogTemp, Log, TEXT("注册节点操作指令"));
 }
 
+void FEventAssetEditor::OnPinConnectionFunc(UEdGraphPin* A, UEdGraphPin* B)
+{
+}
+
 void FEventAssetEditor::OnNodeDoubleClicked(UEdGraphNode* Node)
 {
 	UEventNode_Base* EventNode = Cast<UEdGraphNode_Event>(Node)->GetEventNode();
@@ -326,7 +332,6 @@ bool FEventAssetEditor::CanCopyNodes() const
 
 void FEventAssetEditor::CopySelectedNodes() const
 {
-	
 }
 
 bool FEventAssetEditor::CanCutNodes() const

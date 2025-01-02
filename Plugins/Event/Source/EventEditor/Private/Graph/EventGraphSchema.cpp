@@ -21,11 +21,55 @@ TArray<UClass*> UEventGraphSchema::NativeEventNodes;
 TMap<UClass*, UClass*> UEventGraphSchema::AssignedEdGraphNodeClasses; // <EventNode,EdGraphNode>
 TMap<FName, FAssetData> UEventGraphSchema::BlueprintEventNodes; // <资产名，蓝图资产>
 
+FOnPinConnection UEventGraphSchema::OnPinConnection;
+
 void UEventGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
 	BindEventNodeActions(ContextMenuBuilder);
 
 	UE_LOG(LogTemp, Log, TEXT("右键显示节点列表"));
+}
+
+const FPinConnectionResponse UEventGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
+{
+	// 无法自己连接自己
+	if (A->GetOwningNode() == B->GetOwningNode())
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW,LOCTEXT("PinErrorSameNode", "Both are on the same node"));
+	}
+
+	// 输入无法连接输入
+	if (A->Direction == EGPD_Input && B->Direction == EGPD_Input)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW,LOCTEXT("PinErrorInputToInput", "Can't connnect input to input"));
+	}
+
+	// 输出无法连接输出
+	if (A->Direction == EGPD_Output && B->Direction == EGPD_Output)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW,LOCTEXT("PinErrorOutputToOutput", "Can't connnect output to output"));
+	}
+
+	// 引脚类型不一致
+	if (!A->PinType.PinCategory.IsEqual(B->PinType.PinCategory))
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW,LOCTEXT("PinErrorPinTypeNotSame", "PinType not same"));
+	}
+
+	// CONNECT_RESPONSE_BREAK_OTHERS_AB先中断AB再连接
+	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_AB,LOCTEXT("PinConnect", "Connect nodes"));
+}
+
+bool UEventGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const
+{
+	const bool bModified = UEdGraphSchema::TryCreateConnection(A, B);
+	if (bModified)
+	{
+		A->GetOwningNode()->GetGraph()->NotifyGraphChanged();
+		OnPinConnection.ExecuteIfBound(A, B);
+	}
+
+	return bModified;
 }
 
 void UEventGraphSchema::BindAssetChangeActions()

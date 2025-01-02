@@ -3,6 +3,9 @@
 
 #include "EventGraphSchema.generated.h"
 
+// 委托
+DECLARE_DELEGATE_TwoParams(FOnPinConnection, UEdGraphPin*, UEdGraphPin*) // PinA，PinB
+
 // 图标面板编辑规则
 
 UCLASS()
@@ -13,6 +16,8 @@ class EVENTEDITOR_API UEventGraphSchema : public UEdGraphSchema
 public:
 	// UEdGraphSchema
 	virtual void GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
+	virtual const FPinConnectionResponse CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const override;
+	virtual bool TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const override;
 	// END
 
 public:
@@ -26,8 +31,11 @@ private:
 	static void OnAssetAdded(const FAssetData& AssetData);
 	static void OnAssetRemoved(const FAssetData& AssetData);
 
+public:
+	static FOnPinConnection OnPinConnection;
+
 private:
-	static TArray<UClass*> NativeEventNodes;	// 已创建的蓝图节点
+	static TArray<UClass*> NativeEventNodes; // 已创建的蓝图节点
 	static TMap<UClass*, UClass*> AssignedEdGraphNodeClasses; // <EventNode,EdGraphNode>
 	static TMap<FName, FAssetData> BlueprintEventNodes; // <资产名，蓝图资产>
 };

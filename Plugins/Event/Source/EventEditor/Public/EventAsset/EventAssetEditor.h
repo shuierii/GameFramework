@@ -28,7 +28,8 @@ private:
 	void CreateToolbar(); // 创建工具栏
 	TSharedRef<SGraphEditor> CreateGraphWidget(); // 创建图表面板
 	void BindGraphCommands(); // 绑定图标操作指令，如复制,跳转蓝图定义等
-	
+	void OnPinConnectionFunc(UEdGraphPin* A, UEdGraphPin* B);
+
 	void OnNodeDoubleClicked(UEdGraphNode* Node);
 	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 
