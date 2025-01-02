@@ -5,7 +5,7 @@
 #include "EdGraphNode_Event.generated.h"
 
 UCLASS()
-class UEdGraphNode_Event : public UEdGraphNode
+class EVENTEDITOR_API UEdGraphNode_Event : public UEdGraphNode
 {
 	GENERATED_BODY()
 
@@ -13,6 +13,15 @@ public:
 	// UEdGraphNode
 	virtual void AllocateDefaultPins() override; // 默认引脚
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override; // 创建节点widget
+	virtual bool CanJumpToDefinition() const override;
+	virtual void JumpToDefinition() const override;
+	virtual bool CanUserDeleteNode() const override;
+	virtual bool CanDuplicateNode() const override;
+	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
+	virtual FLinearColor GetNodeTitleColor() const override;
+	virtual FSlateIcon GetIconAndTint(FLinearColor& OutColor) const override;
+	virtual FText GetTooltipText() const override;
+	virtual void PrepareForCopying() override;
 	// END
 
 	// Pin
@@ -24,7 +33,7 @@ public:
 
 public:
 	void SetEventNode(UEventNode_Base* InEventNode);
-	UEventNode_Base* GetEventNode();
+	UEventNode_Base* GetEventNode() const;
 
 public:
 	// 绑定的数据节点

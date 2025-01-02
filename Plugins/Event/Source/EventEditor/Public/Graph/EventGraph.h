@@ -11,7 +11,12 @@ class EVENTEDITOR_API UEventGraph : public UEdGraph
 	GENERATED_BODY()
 
 public:
+	// UEdGraph
+	virtual void NotifyGraphChanged() override;
+	// END
+	
 	static UEdGraph* CreateGraph(UEventAsset* InEventAsset);
 
 	UEventAsset* GetEventAsset() const;	// 获取当前表绑定的事件资产
 };
+

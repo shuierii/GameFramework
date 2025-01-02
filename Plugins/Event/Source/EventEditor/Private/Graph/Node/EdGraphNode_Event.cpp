@@ -1,6 +1,8 @@
 ﻿#include "Graph/Node/EdGraphNode_Event.h"
 
+#include "Graph/EventGraphSettings.h"
 #include "Graph/Widget/GraphNode_Event.h"
+#include "Kismet2/KismetEditorUtilities.h"
 
 #define LOCTEXT_NAMESPACE "UEventGraphNode"
 
@@ -12,6 +14,100 @@ void UEdGraphNode_Event::AllocateDefaultPins()
 TSharedPtr<SGraphNode> UEdGraphNode_Event::CreateVisualWidget()
 {
 	return SNew(SGraphNode_Event, this);
+}
+
+bool UEdGraphNode_Event::CanJumpToDefinition() const
+{
+	return IsValid(this->EventNode);
+}
+
+void UEdGraphNode_Event::JumpToDefinition() const
+{
+	if (this->EventNode == nullptr)
+	{
+		return;
+	}
+
+	// 区别是C++还是蓝图
+	if (this->EventNode->GetClass()->IsNative())
+	{
+		return;
+	}
+
+	// blueprint
+	FKismetEditorUtilities::BringKismetToFocusAttentionOnObject(this->EventNode->GetClass());
+}
+
+bool UEdGraphNode_Event::CanUserDeleteNode() const
+{
+	return true;
+}
+
+bool UEdGraphNode_Event::CanDuplicateNode() const
+{
+	return true;
+}
+
+FText UEdGraphNode_Event::GetNodeTitle(ENodeTitleType::Type TitleType) const
+{
+	if (this->EventNode == nullptr)
+	{
+		return Super::GetNodeTitle(TitleType);
+	}
+
+	return this->EventNode->GetNodeTitle();
+}
+
+FLinearColor UEdGraphNode_Event::GetNodeTitleColor() const
+{
+	if (this->EventNode == nullptr)
+	{
+		return Super::GetNodeTitleColor();
+	}
+
+	UEventGraphSettings* GraphSettings = UEventGraphSettings::Get();
+	if (const FLinearColor* NodeSpecificColor = GraphSettings->NodeSpecificColors.Find(this->EventNode->GetClass()))
+	{
+		return *NodeSpecificColor;
+	}
+	
+	if (const FLinearColor* StyleColor = GraphSettings->NodeTitleColors.Find(this->EventNode->GetNodeStyle()))
+	{
+		return *StyleColor;
+	}
+
+	return Super::GetNodeTitleColor();
+}
+
+FSlateIcon UEdGraphNode_Event::GetIconAndTint(FLinearColor& OutColor) const
+{
+	return FSlateIcon();
+}
+
+FText UEdGraphNode_Event::GetTooltipText() const
+{
+	FText Tooltip;
+	if (this->EventNode)
+	{
+		Tooltip = this->EventNode->GetClass()->GetToolTipText();
+	}
+
+	if (Tooltip.IsEmpty())
+	{
+		Tooltip = GetNodeTitle(ENodeTitleType::ListView);
+	}
+
+	return Tooltip;
+}
+
+void UEdGraphNode_Event::PrepareForCopying()
+{
+	Super::PrepareForCopying();
+
+	if (this->EventNode)
+	{
+		this->EventNode->Rename(nullptr, this,REN_DontCreateRedirectors);
+	}
 }
 
 void UEdGraphNode_Event::CreateInputPin(const FName& PinName, const FName& PinType, bool bIsTransaction, bool bIsRefreshGraph, const FName& PinSubCategory)
@@ -56,7 +152,7 @@ void UEdGraphNode_Event::CreateOutputPin(const FName& PinName, const FName& PinT
 	ensure(CreatePin(EEdGraphPinDirection::EGPD_Output, PinType, PinSubCategory, PinName));
 
 	UE_LOG(LogTemp, Log, TEXT("编辑节点：创建输出引脚"));
-	
+
 	if (bIsRefreshGraph)
 	{
 		GetGraph()->NotifyGraphChanged();
@@ -85,7 +181,7 @@ void UEdGraphNode_Event::CreateOutputPin(const FName& PinName, const FName& PinT
 	ensure(CreatePin(EEdGraphPinDirection::EGPD_Output, EdGraphPinType, PinName, InsertIndex + 1));
 
 	UE_LOG(LogTemp, Log, TEXT("编辑节点：插入输出引脚"));
-	
+
 	if (bIsRefreshGraph)
 	{
 		GetGraph()->NotifyGraphChanged();
@@ -124,12 +220,12 @@ int32 UEdGraphNode_Event::FindPinLastIndex(const FName& PinType, EEdGraphPinDire
 
 void UEdGraphNode_Event::SetEventNode(UEventNode_Base* InEventNode)
 {
-	EventNode = InEventNode;
+	this->EventNode = InEventNode;
 }
 
-UEventNode_Base* UEdGraphNode_Event::GetEventNode()
+UEventNode_Base* UEdGraphNode_Event::GetEventNode() const
 {
-	return EventNode;
+	return this->EventNode;
 }
 
 #undef LOCTEXT_NAMESPACE

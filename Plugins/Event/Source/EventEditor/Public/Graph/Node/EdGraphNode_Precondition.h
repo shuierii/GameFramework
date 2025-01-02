@@ -4,7 +4,7 @@
 #include "EdGraphNode_Precondition.generated.h"
 
 UCLASS()
-class UEdGraphNode_Precondition : public UEdGraphNode_Event
+class EVENTEDITOR_API UEdGraphNode_Precondition : public UEdGraphNode_Event
 {
 	GENERATED_BODY()
 

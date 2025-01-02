@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Graph/Node/EdGraphNode_Event.h"
 
 class UEventAsset;
 
@@ -20,11 +21,38 @@ public:
 public:
 	void InitEventAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UObject* ObjectToEditor);
 
+	TSet<UEdGraphNode_Event*> GetSelectedEventNodes() const;
+
 private:
 	void CreateWidgets(); // 创建事件编辑器界面
 	void CreateToolbar(); // 创建工具栏
 	TSharedRef<SGraphEditor> CreateGraphWidget(); // 创建图表面板
-	void BindGraphCommands(); // 绑定图标操作指令，如复制等
+	void BindGraphCommands(); // 绑定图标操作指令，如复制,跳转蓝图定义等
+	
+	void OnNodeDoubleClicked(UEdGraphNode* Node);
+	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
+
+	bool CanSelectAllNodes() const;
+	void SelectAllNodes() const;
+
+	bool CanDeleteNodes() const;
+	void DeleteSelectedNodes();
+	void DeleteSelectedDuplicableNodes();
+
+	bool CanCopyNodes() const;
+	void CopySelectedNodes() const;
+
+	bool CanCutNodes() const;
+	void CutSelectedNodes();
+
+	bool CanPasteNodes() const;
+	void PasteNodes();
+
+	bool CanDuplicateNodes() const;
+	void DuplicateNodes();
+
+	bool CanJumpToNodeDefinition() const;
+	void JumpToNodeDefinition() const;
 
 	TSharedRef<SDockTab> SpawnTab_Details(const FSpawnTabArgs& Args) const;
 	TSharedRef<SDockTab> SpawnTab_GraphCanvas(const FSpawnTabArgs& Args) const;

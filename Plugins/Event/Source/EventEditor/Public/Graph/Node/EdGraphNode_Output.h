@@ -4,7 +4,7 @@
 #include "EdGraphNode_Output.generated.h"
 
 UCLASS()
-class UEdGraphNode_Output : public UEdGraphNode_Event
+class EVENTEDITOR_API UEdGraphNode_Output : public UEdGraphNode_Event
 {
 	GENERATED_BODY()
 

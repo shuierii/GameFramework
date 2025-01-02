@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "EventTypes.h"
 
 #include "EventNode_Base.generated.h"
 
@@ -14,9 +15,14 @@ public:
 	virtual FText GetNodeTitle() const;
 	virtual FText GetNodeToolTip() const;
 
+	EEventNodeStyle GetNodeStyle() const { return NodeStyle; }
+
 protected:
 	UPROPERTY()
 	FString Category;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "EventNode")
+	EEventNodeStyle NodeStyle;
 
 private:
 	UPROPERTY()

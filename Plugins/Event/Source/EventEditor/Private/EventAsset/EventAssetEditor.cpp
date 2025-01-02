@@ -1,8 +1,14 @@
 ﻿#include "EventAsset/EventAssetEditor.h"
 
+#include "EdGraphUtilities.h"
 #include "EventAsset.h"
+#include "EventEditorCommands.h"
+#include "GraphEditorActions.h"
 #include "ToolMenus.h"
+#include "Framework/Commands/GenericCommands.h"
 #include "Graph/EventGraphSchema.h"
+#include "Graph/Node/EdGraphNode_Event.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
 #define LOCTEXT_NAMESPACE "FEventAssetEditor"
 
@@ -12,6 +18,9 @@ const FName FEventAssetEditor::PaletteTab = FName(TEXT("Palette"));
 
 void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UObject* ObjectToEditor)
 {
+
+	UE_LOG(LogTemp, Log, TEXT("初始化编辑器"));
+	
 	EventAsset = CastChecked<UEventAsset>(ObjectToEditor);
 
 	// 创建编辑器界面
@@ -19,6 +28,9 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 
 	// 绑定指令
 	UEventGraphSchema::BindAssetChangeActions();
+
+	// 绑定复制删除等指令
+	BindGraphCommands();
 
 	// 工具栏
 	CreateToolbar();
@@ -68,6 +80,22 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 	RegenerateMenusAndToolbars();
 }
 
+TSet<UEdGraphNode_Event*> FEventAssetEditor::GetSelectedEventNodes() const
+{
+	TSet<UEdGraphNode_Event*> Result;
+
+	const FGraphPanelSelectionSet SelectedNodes = FocusedGraphEditor->GetSelectedNodes();
+	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectedNodes); NodeIt; ++NodeIt)
+	{
+		if (UEdGraphNode_Event* SelectedNode = Cast<UEdGraphNode_Event>(*NodeIt))
+		{
+			Result.Emplace(SelectedNode);
+		}
+	}
+
+	return Result;
+}
+
 void FEventAssetEditor::CreateWidgets()
 {
 	// 图标编辑面板
@@ -111,19 +139,235 @@ TSharedRef<SGraphEditor> FEventAssetEditor::CreateGraphWidget()
 	FGraphAppearanceInfo AppearanceInfo;
 	AppearanceInfo.CornerText = LOCTEXT("AppearanceCornerText_EventAsset", "Event");
 
-	// TODO
+	// 绑定事件
+	SGraphEditor::FGraphEditorEvents InEvents;
+	InEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEventAssetEditor::OnNodeDoubleClicked);
+	InEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FEventAssetEditor::OnNodeTitleCommitted);
+
+	UE_LOG(LogTemp, Log, TEXT("绑定编辑器事件"));
 
 	return SNew(SGraphEditor)
 	.AdditionalCommands(ToolkitCommands)
 	.IsEditable(true)
 	.Appearance(AppearanceInfo)
 	.GraphToEdit(EventAsset->GetGraph())
+	.GraphEvents(InEvents)
 	.AutoExpandActionMenu(true)
 	.ShowGraphStateOverlay(false);
 }
 
 void FEventAssetEditor::BindGraphCommands()
 {
+	FGraphEditorCommands::Register();
+	FEventGraphCommands::Register();
+
+	const FGenericCommands& GenericCommands = FGenericCommands::Get();
+	const FGraphEditorCommandsImpl& GraphEditorCommands = FGraphEditorCommands::Get();
+	const FEventGraphCommands& EventGraphCommands = FEventGraphCommands::Get();
+
+	ToolkitCommands->MapAction(GenericCommands.SelectAll,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::SelectAllNodes),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanSelectAllNodes));
+
+	ToolkitCommands->MapAction(GenericCommands.Delete,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::DeleteSelectedNodes),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanDeleteNodes));
+
+	ToolkitCommands->MapAction(GenericCommands.Copy,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::CopySelectedNodes),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanCopyNodes));
+
+	ToolkitCommands->MapAction(GenericCommands.Cut,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::CutSelectedNodes),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanCutNodes));
+
+	ToolkitCommands->MapAction(GenericCommands.Paste,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::PasteNodes),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanPasteNodes));
+
+	ToolkitCommands->MapAction(GenericCommands.Duplicate,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::DuplicateNodes),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanDuplicateNodes));
+
+	// Jump commands
+	ToolkitCommands->MapAction(EventGraphCommands.JumpToNodeDefinition,
+	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::JumpToNodeDefinition),
+	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanJumpToNodeDefinition));
+
+	UE_LOG(LogTemp, Log, TEXT("注册节点操作指令"));
+}
+
+void FEventAssetEditor::OnNodeDoubleClicked(UEdGraphNode* Node)
+{
+	UEventNode_Base* EventNode = Cast<UEdGraphNode_Event>(Node)->GetEventNode();
+
+	if (EventNode)
+	{
+		Node->JumpToDefinition();
+	}
+}
+
+void FEventAssetEditor::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)
+{
+	if (NodeBeingChanged)
+	{
+		const FScopedTransaction Transaction(LOCTEXT("RenameNode", "Rename Node"));
+		NodeBeingChanged->Modify();
+		NodeBeingChanged->OnRenameNode(NewText.ToString());
+	}
+}
+
+bool FEventAssetEditor::CanSelectAllNodes() const
+{
+	return true;
+}
+
+void FEventAssetEditor::SelectAllNodes() const
+{
+	FocusedGraphEditor->SelectAllNodes();
+}
+
+bool FEventAssetEditor::CanDeleteNodes() const
+{
+	const FGraphPanelSelectionSet SelectedNodes = FocusedGraphEditor->GetSelectedNodes();
+	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectedNodes); NodeIt; ++NodeIt)
+	{
+		if (const UEdGraphNode* Node = Cast<UEdGraphNode>(*NodeIt))
+		{
+			if (!Node->CanUserDeleteNode())
+			{
+				return false;
+			}
+		}
+	}
+
+	return SelectedNodes.Num() > 0;
+}
+
+void FEventAssetEditor::DeleteSelectedNodes()
+{
+	const FScopedTransaction Transaction(LOCTEXT("DeleteSelectedNode", "Delete Selected Node"));
+	FocusedGraphEditor->GetCurrentGraph()->Modify(); // 标记图表为修改状态
+	EventAsset->Modify(); // 标记资产为修改状态
+
+	const FGraphPanelSelectionSet SelectedNodes = FocusedGraphEditor->GetSelectedNodes();
+	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectedNodes); NodeIt; ++NodeIt)
+	{
+		UEdGraphNode* GraphNode = CastChecked<UEdGraphNode>(*NodeIt);
+
+		if (GraphNode->CanUserDeleteNode())
+		{
+			if (const UEdGraphNode_Event* EventEdGraphNode = Cast<UEdGraphNode_Event>(GraphNode))
+			{
+				if (UEventNode_Base* EventNode = EventEdGraphNode->GetEventNode())
+				{
+					// TODO
+
+					FBlueprintEditorUtils::RemoveNode(nullptr, GraphNode, true);
+					continue;
+				}
+			}
+
+			FBlueprintEditorUtils::RemoveNode(nullptr, GraphNode, true);
+		}
+	}
+}
+
+void FEventAssetEditor::DeleteSelectedDuplicableNodes()
+{
+	// Cache off the old selection
+	const FGraphPanelSelectionSet OldSelectedNodes = FocusedGraphEditor->GetSelectedNodes();
+
+	// Clear the selection and only select the nodes that can be duplicated
+	FGraphPanelSelectionSet RemainingNodes;
+	FocusedGraphEditor->ClearSelectionSet();
+
+	for (FGraphPanelSelectionSet::TConstIterator SelectedIt(OldSelectedNodes); SelectedIt; ++SelectedIt)
+	{
+		if (UEdGraphNode* Node = Cast<UEdGraphNode>(*SelectedIt))
+		{
+			if (Node->CanDuplicateNode())
+			{
+				FocusedGraphEditor->SetNodeSelection(Node, true);
+			}
+			else
+			{
+				RemainingNodes.Add(Node);
+			}
+		}
+	}
+
+	// Delete the duplicable nodes
+	DeleteSelectedNodes();
+
+	for (FGraphPanelSelectionSet::TConstIterator SelectedIt(RemainingNodes); SelectedIt; ++SelectedIt)
+	{
+		if (UEdGraphNode* Node = Cast<UEdGraphNode>(*SelectedIt))
+		{
+			FocusedGraphEditor->SetNodeSelection(Node, true);
+		}
+	}
+}
+
+bool FEventAssetEditor::CanCopyNodes() const
+{
+	const FGraphPanelSelectionSet SelectedNodes = FocusedGraphEditor->GetSelectedNodes();
+	for (FGraphPanelSelectionSet::TConstIterator SelectedIt(SelectedNodes); SelectedIt; ++SelectedIt)
+	{
+		const UEdGraphNode* Node = Cast<UEdGraphNode>(*SelectedIt);
+		if (Node && Node->CanDuplicateNode())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void FEventAssetEditor::CopySelectedNodes() const
+{
+	
+}
+
+bool FEventAssetEditor::CanCutNodes() const
+{
+	return true;
+}
+
+void FEventAssetEditor::CutSelectedNodes()
+{
+}
+
+bool FEventAssetEditor::CanPasteNodes() const
+{
+	return true;
+}
+
+void FEventAssetEditor::PasteNodes()
+{
+}
+
+bool FEventAssetEditor::CanDuplicateNodes() const
+{
+	return true;
+}
+
+void FEventAssetEditor::DuplicateNodes()
+{
+}
+
+bool FEventAssetEditor::CanJumpToNodeDefinition() const
+{
+	return GetSelectedEventNodes().Num() == 1;
+}
+
+void FEventAssetEditor::JumpToNodeDefinition() const
+{
+	for (const UEdGraphNode_Event* SelectedNode : GetSelectedEventNodes())
+	{
+		SelectedNode->JumpToDefinition();
+		return;
+	}
 }
 
 TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_Details(const FSpawnTabArgs& Args) const

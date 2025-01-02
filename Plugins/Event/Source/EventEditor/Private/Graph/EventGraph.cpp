@@ -3,6 +3,13 @@
 #include "Graph/EventGraphSchema.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
+void UEventGraph::NotifyGraphChanged()
+{
+	this->GetEventAsset()->MarkPackageDirty();
+
+	Super::NotifyGraphChanged();
+}
+
 UEdGraph* UEventGraph::CreateGraph(UEventAsset* InEventAsset)
 {
 	UEventGraph* NewGraph = CastChecked<UEventGraph>(FBlueprintEditorUtils::CreateNewGraph(InEventAsset, NAME_None, StaticClass(), UEventGraphSchema::StaticClass()));

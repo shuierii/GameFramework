@@ -28,7 +28,9 @@ public class EventEditor : ModuleRules
 				"EditorStyle",
 				"ToolMenus",
 				"KismetWidgets",
-				"Projects"
+				"Projects",
+				"DeveloperSettings",
+				"ApplicationCore"
 			}
 		);
 	}
