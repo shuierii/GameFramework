@@ -4,7 +4,7 @@
 #include "Node/EventNode_Input.h"
 #include "Kismet2/KismetEditorUtilities.h"
 
-#define LOCTEXT_NAMESPACE "UNodeAssetFactory_Precondition"
+#define LOCTEXT_NAMESPACE "UNodeAssetFactory_Input"
 
 UNodeAssetFactory_Input::UNodeAssetFactory_Input(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
 {
@@ -29,7 +29,7 @@ UObject* UNodeAssetFactory_Input::FactoryCreateNew(UClass* InClass, UObject* InP
 
 	UBlueprint_EventNode_Input* NewBP = CastChecked<UBlueprint_EventNode_Input>(FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, InName, BPTYPE_Normal, UBlueprint_EventNode_Input::StaticClass(), UBlueprintGeneratedClass::StaticClass()));
 
-	UE_LOG(LogTemp, Log, TEXT("创建资产：前置条件"));
+	UE_LOG(LogTemp, Log, TEXT("创建资产：输入"));
 
 	return NewBP;
 }

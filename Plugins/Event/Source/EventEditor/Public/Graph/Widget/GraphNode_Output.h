@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "GraphNode_Event.h"
+#include "GraphNode_Base.h"
 
-class EVENTEDITOR_API SGraphNode_Output : public SGraphNode_Event
+class EVENTEDITOR_API SGraphNode_Output : public SGraphNode_Base
 {
 public:
 };

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Node/EdGraphNode_Event.h"
+#include "Node\EdGraphNode_Base.h"
 
 #include "EventGraphSchemaActions.generated.h"
 
@@ -27,7 +27,7 @@ public:
 	virtual UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
 	// END
 
-	UEdGraphNode_Event* CreateEdGraphNode(const UClass* InNodeClass, UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, const bool bSelectNewNode = true);
+	UEdGraphNode_Base* CreateEdGraphNode(const UClass* InNodeClass, UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, const bool bSelectNewNode = true);
 
 public:
 	UPROPERTY()

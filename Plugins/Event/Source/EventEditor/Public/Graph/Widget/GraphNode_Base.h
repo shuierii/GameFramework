@@ -1,19 +1,19 @@
 ﻿#pragma once
 #include "SGraphNode.h"
-#include "Graph/Node/EdGraphNode_Event.h"
+#include "..\Node\EdGraphNode_Base.h"
 
-class EVENTEDITOR_API SGraphNode_Event : public SGraphNode
+class EVENTEDITOR_API SGraphNode_Base : public SGraphNode
 {
 public:
 	// slate必须有
-	SLATE_BEGIN_ARGS(SGraphNode_Event)
+	SLATE_BEGIN_ARGS(SGraphNode_Base)
 		{
 		}
 
 	SLATE_END_ARGS()
 
 	// 必须有，widget创建从这里入
-	void Construct(const FArguments& InArgs, UEdGraphNode_Event* InNode);
+	void Construct(const FArguments& InArgs, UEdGraphNode_Base* InNode);
 
 protected:
 	// SGraphNode
@@ -34,5 +34,5 @@ protected:
 	};
 
 protected:
-	UEdGraphNode_Event* EventGraphNode = nullptr;
+	UEdGraphNode_Base* EventGraphNode = nullptr;
 };

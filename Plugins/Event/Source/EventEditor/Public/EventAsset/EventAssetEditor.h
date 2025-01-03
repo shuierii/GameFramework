@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Graph/Node/EdGraphNode_Event.h"
+#include "..\Graph\Node\EdGraphNode_Base.h"
 
 class UEventAsset;
 
@@ -21,7 +21,7 @@ public:
 public:
 	void InitEventAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UObject* ObjectToEditor);
 
-	TSet<UEdGraphNode_Event*> GetSelectedEventNodes() const;
+	TSet<UEdGraphNode_Base*> GetSelectedEventNodes() const;
 
 private:
 	void CreateWidgets(); // 创建事件编辑器界面

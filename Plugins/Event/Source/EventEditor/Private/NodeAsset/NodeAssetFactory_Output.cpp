@@ -29,7 +29,7 @@ UObject* UNodeAssetFactory_Output::FactoryCreateNew(UClass* InClass, UObject* In
 
 	UBlueprint_EventNode_Output* NewBP = CastChecked<UBlueprint_EventNode_Output>(FKismetEditorUtilities::CreateBlueprint(ParentClass, InParent, InName, BPTYPE_Normal, UBlueprint_EventNode_Output::StaticClass(), UBlueprintGeneratedClass::StaticClass()));
 
-	UE_LOG(LogTemp, Log, TEXT("创建资产：前置条件"));
+	UE_LOG(LogTemp, Log, TEXT("创建资产：输出"));
 	
 	return NewBP;
 }

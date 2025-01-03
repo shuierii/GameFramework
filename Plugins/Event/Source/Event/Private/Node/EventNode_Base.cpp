@@ -47,3 +47,8 @@ FText UEventNode_Base::GetNodeToolTip() const
 
 	return GetClass()->GetToolTipText();
 }
+
+FString UEventNode_Base::GetNodeType()
+{
+	return GetNodeType_Blueprint();
+}

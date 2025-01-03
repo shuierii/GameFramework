@@ -1,10 +1,9 @@
 ﻿#pragma once
-#include "EdGraphNode_Base.h"
-
-#include "EdGraphNode_Input.generated.h"
+#include "EdGraphNode_EventRoot.h"
+#include "EdGraphNode_DialogEvent.generated.h"
 
 UCLASS()
-class EVENTEDITOR_API UEdGraphNode_Input : public UEdGraphNode_Base
+class EVENTEDITOR_API UEdGraphNode_DialogEvent : public UEdGraphNode_EventRoot
 {
 	GENERATED_BODY()
 

@@ -2,10 +2,10 @@
 
 #include "EventNodeTypes.h"
 #include "Event/Public/Node/EventNode_Base.h"
-#include "EdGraphNode_Event.generated.h"
+#include "EdGraphNode_Base.generated.h"
 
 UCLASS()
-class EVENTEDITOR_API UEdGraphNode_Event : public UEdGraphNode
+class EVENTEDITOR_API UEdGraphNode_Base : public UEdGraphNode
 {
 	GENERATED_BODY()
 

@@ -1,4 +1,4 @@
-﻿#include "Graph/Widget/GraphNode_Event.h"
+﻿#include "Graph/Widget/GraphNode_Base.h"
 
 #include "EventEditorStyle.h"
 #include "GraphEditorSettings.h"
@@ -6,7 +6,7 @@
 #include "SLevelOfDetailBranchNode.h"
 #include "Graph/Widget/GraphPin_Event.h"
 
-void SGraphNode_Event::Construct(const FArguments& InArgs, UEdGraphNode_Event* InNode)
+void SGraphNode_Base::Construct(const FArguments& InArgs, UEdGraphNode_Base* InNode)
 {
 	this->GraphNode = InNode;
 	this->EventGraphNode = InNode;
@@ -15,7 +15,7 @@ void SGraphNode_Event::Construct(const FArguments& InArgs, UEdGraphNode_Event* I
 	this->UpdateGraphNode();
 }
 
-void SGraphNode_Event::UpdateGraphNode()
+void SGraphNode_Base::UpdateGraphNode()
 {
 	InputPins.Empty();
 	OutputPins.Empty();
@@ -85,14 +85,14 @@ void SGraphNode_Event::UpdateGraphNode()
 	CreateOutputAddButton();
 }
 
-void SGraphNode_Event::CreateStandardPinWidget(UEdGraphPin* Pin)
+void SGraphNode_Base::CreateStandardPinWidget(UEdGraphPin* Pin)
 {
 	const TSharedPtr<SGraphPin> NewPin = SNew(SGraphPin_Event, Pin);
 
 	AddPin(NewPin.ToSharedRef());
 }
 
-TSharedRef<SWidget> SGraphNode_Event::CreateCommentBubble()
+TSharedRef<SWidget> SGraphNode_Base::CreateCommentBubble()
 {
 	const FSlateColor CommentColor = GetDefault<UGraphEditorSettings>()->DefaultCommentNodeTitleColor;
 
@@ -109,7 +109,7 @@ TSharedRef<SWidget> SGraphNode_Event::CreateCommentBubble()
 	.IsGraphNodeHovered(this, &SGraphNode::IsHovered);
 }
 
-TSharedRef<SWidget> SGraphNode_Event::CreateNodeTitle()
+TSharedRef<SWidget> SGraphNode_Base::CreateNodeTitle()
 {
 	IconColor = FLinearColor::White;
 	const FSlateBrush* IconBrush = nullptr;
@@ -166,7 +166,7 @@ TSharedRef<SWidget> SGraphNode_Event::CreateNodeTitle()
 	SetDefaultTitleAreaWidget(DefaultTitleAreaWidget);
 
 	return SNew(SLevelOfDetailBranchNode)
-	.UseLowDetailSlot(this, &SGraphNode_Event::UseLowDetailNodeTitles)
+	.UseLowDetailSlot(this, &SGraphNode_Base::UseLowDetailNodeTitles)
 	.LowDetail()
 		[
 			SNew(SBorder)
@@ -180,7 +180,7 @@ TSharedRef<SWidget> SGraphNode_Event::CreateNodeTitle()
 		];
 }
 
-TSharedRef<SWidget> SGraphNode_Event::CreateNodeBody()
+TSharedRef<SWidget> SGraphNode_Base::CreateNodeBody()
 {
 	return SNew(SBorder)
 	.BorderImage(FEditorStyle::GetBrush("NoBorder"))

@@ -9,4 +9,5 @@ class EVENT_API UEventNode_Trigger : public UEventNode_Base
 
 public:
 	virtual FString GetNodeCategory() const override;
+	virtual FString GetNodeType() override { return "E_Trigger"; };
 };

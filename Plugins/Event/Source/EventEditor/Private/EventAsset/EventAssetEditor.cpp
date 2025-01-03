@@ -7,7 +7,7 @@
 #include "ToolMenus.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "Graph/EventGraphSchema.h"
-#include "Graph/Node/EdGraphNode_Event.h"
+#include "..\..\Public\Graph\Node\EdGraphNode_Base.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 #define LOCTEXT_NAMESPACE "FEventAssetEditor"
@@ -82,14 +82,14 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 	RegenerateMenusAndToolbars();
 }
 
-TSet<UEdGraphNode_Event*> FEventAssetEditor::GetSelectedEventNodes() const
+TSet<UEdGraphNode_Base*> FEventAssetEditor::GetSelectedEventNodes() const
 {
-	TSet<UEdGraphNode_Event*> Result;
+	TSet<UEdGraphNode_Base*> Result;
 
 	const FGraphPanelSelectionSet SelectedNodes = FocusedGraphEditor->GetSelectedNodes();
 	for (FGraphPanelSelectionSet::TConstIterator NodeIt(SelectedNodes); NodeIt; ++NodeIt)
 	{
-		if (UEdGraphNode_Event* SelectedNode = Cast<UEdGraphNode_Event>(*NodeIt))
+		if (UEdGraphNode_Base* SelectedNode = Cast<UEdGraphNode_Base>(*NodeIt))
 		{
 			Result.Emplace(SelectedNode);
 		}
@@ -205,7 +205,7 @@ void FEventAssetEditor::OnPinConnectionFunc(UEdGraphPin* A, UEdGraphPin* B)
 
 void FEventAssetEditor::OnNodeDoubleClicked(UEdGraphNode* Node)
 {
-	UEventNode_Base* EventNode = Cast<UEdGraphNode_Event>(Node)->GetEventNode();
+	UEventNode_Base* EventNode = Cast<UEdGraphNode_Base>(Node)->GetEventNode();
 
 	if (EventNode)
 	{
@@ -263,7 +263,7 @@ void FEventAssetEditor::DeleteSelectedNodes()
 
 		if (GraphNode->CanUserDeleteNode())
 		{
-			if (const UEdGraphNode_Event* EventEdGraphNode = Cast<UEdGraphNode_Event>(GraphNode))
+			if (const UEdGraphNode_Base* EventEdGraphNode = Cast<UEdGraphNode_Base>(GraphNode))
 			{
 				if (UEventNode_Base* EventNode = EventEdGraphNode->GetEventNode())
 				{
@@ -368,7 +368,7 @@ bool FEventAssetEditor::CanJumpToNodeDefinition() const
 
 void FEventAssetEditor::JumpToNodeDefinition() const
 {
-	for (const UEdGraphNode_Event* SelectedNode : GetSelectedEventNodes())
+	for (const UEdGraphNode_Base* SelectedNode : GetSelectedEventNodes())
 	{
 		SelectedNode->JumpToDefinition();
 		return;

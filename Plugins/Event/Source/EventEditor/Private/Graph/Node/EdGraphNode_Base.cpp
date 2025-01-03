@@ -1,27 +1,27 @@
-﻿#include "Graph/Node/EdGraphNode_Event.h"
+﻿#include "..\..\..\Public\Graph\Node\EdGraphNode_Base.h"
 
 #include "Graph/EventGraphSettings.h"
-#include "Graph/Widget/GraphNode_Event.h"
+#include "Graph/Widget/GraphNode_Base.h"
 #include "Kismet2/KismetEditorUtilities.h"
 
 #define LOCTEXT_NAMESPACE "UEventGraphNode"
 
-void UEdGraphNode_Event::AllocateDefaultPins()
+void UEdGraphNode_Base::AllocateDefaultPins()
 {
 	Super::AllocateDefaultPins();
 }
 
-TSharedPtr<SGraphNode> UEdGraphNode_Event::CreateVisualWidget()
+TSharedPtr<SGraphNode> UEdGraphNode_Base::CreateVisualWidget()
 {
-	return SNew(SGraphNode_Event, this);
+	return SNew(SGraphNode_Base, this);
 }
 
-bool UEdGraphNode_Event::CanJumpToDefinition() const
+bool UEdGraphNode_Base::CanJumpToDefinition() const
 {
 	return IsValid(this->EventNode);
 }
 
-void UEdGraphNode_Event::JumpToDefinition() const
+void UEdGraphNode_Base::JumpToDefinition() const
 {
 	if (this->EventNode == nullptr)
 	{
@@ -38,17 +38,17 @@ void UEdGraphNode_Event::JumpToDefinition() const
 	FKismetEditorUtilities::BringKismetToFocusAttentionOnObject(this->EventNode->GetClass());
 }
 
-bool UEdGraphNode_Event::CanUserDeleteNode() const
+bool UEdGraphNode_Base::CanUserDeleteNode() const
 {
 	return true;
 }
 
-bool UEdGraphNode_Event::CanDuplicateNode() const
+bool UEdGraphNode_Base::CanDuplicateNode() const
 {
 	return true;
 }
 
-FText UEdGraphNode_Event::GetNodeTitle(ENodeTitleType::Type TitleType) const
+FText UEdGraphNode_Base::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
 	if (this->EventNode == nullptr)
 	{
@@ -58,7 +58,7 @@ FText UEdGraphNode_Event::GetNodeTitle(ENodeTitleType::Type TitleType) const
 	return this->EventNode->GetNodeTitle();
 }
 
-FLinearColor UEdGraphNode_Event::GetNodeTitleColor() const
+FLinearColor UEdGraphNode_Base::GetNodeTitleColor() const
 {
 	if (this->EventNode == nullptr)
 	{
@@ -79,12 +79,12 @@ FLinearColor UEdGraphNode_Event::GetNodeTitleColor() const
 	return Super::GetNodeTitleColor();
 }
 
-FSlateIcon UEdGraphNode_Event::GetIconAndTint(FLinearColor& OutColor) const
+FSlateIcon UEdGraphNode_Base::GetIconAndTint(FLinearColor& OutColor) const
 {
 	return FSlateIcon();
 }
 
-FText UEdGraphNode_Event::GetTooltipText() const
+FText UEdGraphNode_Base::GetTooltipText() const
 {
 	FText Tooltip;
 	if (this->EventNode)
@@ -100,7 +100,7 @@ FText UEdGraphNode_Event::GetTooltipText() const
 	return Tooltip;
 }
 
-void UEdGraphNode_Event::PrepareForCopying()
+void UEdGraphNode_Base::PrepareForCopying()
 {
 	Super::PrepareForCopying();
 
@@ -110,7 +110,7 @@ void UEdGraphNode_Event::PrepareForCopying()
 	}
 }
 
-void UEdGraphNode_Event::CreateInputPin(const FName& PinName, const FName& PinType, bool bIsTransaction, bool bIsRefreshGraph, const FName& PinSubCategory)
+void UEdGraphNode_Base::CreateInputPin(const FName& PinName, const FName& PinType, bool bIsTransaction, bool bIsRefreshGraph, const FName& PinSubCategory)
 {
 	if (PinName.IsNone() || PinType.IsNone())
 	{
@@ -137,7 +137,7 @@ void UEdGraphNode_Event::CreateInputPin(const FName& PinName, const FName& PinTy
 	}
 }
 
-void UEdGraphNode_Event::CreateOutputPin(const FName& PinName, const FName& PinType, bool bIsTransaction, bool bIsRefreshGraph, const FName& PinSubCategory)
+void UEdGraphNode_Base::CreateOutputPin(const FName& PinName, const FName& PinType, bool bIsTransaction, bool bIsRefreshGraph, const FName& PinSubCategory)
 {
 	if (PinName.IsNone() || PinType.IsNone())
 	{
@@ -164,7 +164,7 @@ void UEdGraphNode_Event::CreateOutputPin(const FName& PinName, const FName& PinT
 	}
 }
 
-void UEdGraphNode_Event::CreateOutputPin(const FName& PinName, const FName& PinType, const FName& InsertPinType, bool bIsTransaction, bool bIsRefreshGraph)
+void UEdGraphNode_Base::CreateOutputPin(const FName& PinName, const FName& PinType, const FName& InsertPinType, bool bIsTransaction, bool bIsRefreshGraph)
 {
 	if (PinName.IsNone() || PinType.IsNone() || InsertPinType.IsNone())
 	{
@@ -193,7 +193,7 @@ void UEdGraphNode_Event::CreateOutputPin(const FName& PinName, const FName& PinT
 	}
 }
 
-int32 UEdGraphNode_Event::FindPinLastIndex(const FName& PinType, EEdGraphPinDirection Dir)
+int32 UEdGraphNode_Base::FindPinLastIndex(const FName& PinType, EEdGraphPinDirection Dir)
 {
 	if (PinType.IsNone())
 	{
@@ -218,12 +218,12 @@ int32 UEdGraphNode_Event::FindPinLastIndex(const FName& PinType, EEdGraphPinDire
 	return -2;
 }
 
-void UEdGraphNode_Event::SetEventNode(UEventNode_Base* InEventNode)
+void UEdGraphNode_Base::SetEventNode(UEventNode_Base* InEventNode)
 {
 	this->EventNode = InEventNode;
 }
 
-UEventNode_Base* UEdGraphNode_Event::GetEventNode() const
+UEventNode_Base* UEdGraphNode_Base::GetEventNode() const
 {
 	return this->EventNode;
 }

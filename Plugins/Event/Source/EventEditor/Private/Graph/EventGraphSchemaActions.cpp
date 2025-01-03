@@ -23,10 +23,12 @@ UEdGraphNode* FEventGraphSchemaActions_NewNode::PerformAction(UEdGraph* ParentGr
 	return nullptr;
 }
 
-UEdGraphNode_Event* FEventGraphSchemaActions_NewNode::CreateEdGraphNode(const UClass* InNodeClass, UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, const bool bSelectNewNode)
+UEdGraphNode_Base* FEventGraphSchemaActions_NewNode::CreateEdGraphNode(const UClass* InNodeClass, UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, const bool bSelectNewNode)
 {
 	check(InNodeClass);
 
+	UE_LOG(LogTemp, Log, TEXT("创建编辑器节点"));
+	
 	UEventAsset* EventAsset = CastChecked<UEventGraph>(ParentGraph)->GetEventAsset();
 	GEditor->BeginTransaction(LOCTEXT("AddNode", "Add Node"));
 	ParentGraph->Modify();
@@ -39,7 +41,7 @@ UEdGraphNode_Event* FEventGraphSchemaActions_NewNode::CreateEdGraphNode(const UC
 
 	// 创建EdGraphNode
 	const UClass* EdGraphNodeClass = UEventGraphSchema::GetAssignedEdGraphNodeClass(InNodeClass);
-	UEdGraphNode_Event* NewEdGraphNode = NewObject<UEdGraphNode_Event>(ParentGraph, EdGraphNodeClass, NAME_None, RF_Transactional);
+	UEdGraphNode_Base* NewEdGraphNode = NewObject<UEdGraphNode_Base>(ParentGraph, EdGraphNodeClass, NAME_None, RF_Transactional);
 	NewEdGraphNode->CreateNewGuid();
 	NewEdGraphNode->NodePosX = Location.X;
 	NewEdGraphNode->NodePosY = Location.Y;

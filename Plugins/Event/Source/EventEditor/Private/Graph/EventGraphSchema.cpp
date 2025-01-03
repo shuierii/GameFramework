@@ -1,18 +1,27 @@
 ﻿#include "Graph/EventGraphSchema.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Blueprint/Blueprint_EventNode_Action.h"
 #include "Blueprint/Blueprint_EventNode_Input.h"
 #include "Blueprint/Blueprint_EventNode_Output.h"
 #include "Blueprint/Blueprint_EventNode_Precondition.h"
 #include "Blueprint/Blueprint_EventNode_Trigger.h"
 #include "Graph/EventGraphSchemaActions.h"
+#include "Graph/Node/EdGraphNode_Action.h"
+#include "Graph/Node/EdGraphNode_Dialog.h"
+#include "Graph/Node/EdGraphNode_DialogEvent.h"
 #include "Graph/Node/EdGraphNode_Input.h"
 #include "Graph/Node/EdGraphNode_Output.h"
 #include "Graph/Node/EdGraphNode_Precondition.h"
+#include "Graph/Node/EdGraphNode_Script.h"
 #include "Graph/Node/EdGraphNode_Trigger.h"
+#include "Node/EventNode_Action.h"
+#include "Node/EventNode_Dialog.h"
+#include "Node/EventNode_DialogEvent.h"
 #include "Node/EventNode_Input.h"
 #include "Node/EventNode_Output.h"
 #include "Node/EventNode_Precondition.h"
+#include "Node/EventNode_Script.h"
 #include "Node/EventNode_Trigger.h"
 
 #define LOCTEXT_NAMESPACE "UEventGraphSchema"
@@ -96,7 +105,7 @@ UClass* UEventGraphSchema::GetAssignedEdGraphNodeClass(const UClass* EventNodeCl
 		}
 	}
 
-	return UEdGraphNode_Event::StaticClass();
+	return UEdGraphNode_Base::StaticClass();
 }
 
 void UEventGraphSchema::BindEventNodeActions(FGraphActionMenuBuilder& ActionMenuBuilder)
@@ -167,6 +176,18 @@ void UEventGraphSchema::GatherEventNodes()
 		// Output
 		AssignedEdGraphNodeClasses.Emplace(UEventNode_Output::StaticClass(), UEdGraphNode_Output::StaticClass());
 
+		// Event
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_DialogEvent::StaticClass(), UEdGraphNode_DialogEvent::StaticClass());
+
+		// Script
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_Script::StaticClass(), UEdGraphNode_Script::StaticClass());
+
+		// Action
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_Action::StaticClass(), UEdGraphNode_Action::StaticClass());
+
+		// Dialog
+		AssignedEdGraphNodeClasses.Emplace(UEventNode_Dialog::StaticClass(), UEdGraphNode_Dialog::StaticClass());
+		
 		UE_LOG(LogTemp, Log, TEXT("绑定节点类和编辑节点类"));
 	}
 
@@ -204,7 +225,8 @@ void UEventGraphSchema::OnAssetAdded(const FAssetData& AssetData)
 		if (ChildClass->IsChildOf(UBlueprint_EventNode_Trigger::StaticClass())
 			|| ChildClass->IsChildOf(UBlueprint_EventNode_Precondition::StaticClass())
 			|| ChildClass->IsChildOf(UBlueprint_EventNode_Input::StaticClass())
-			|| ChildClass->IsChildOf(UBlueprint_EventNode_Output::StaticClass()))
+			|| ChildClass->IsChildOf(UBlueprint_EventNode_Output::StaticClass())
+			|| ChildClass->IsChildOf(UBlueprint_EventNode_Action::StaticClass()))
 		{
 			BlueprintEventNodes.Emplace(AssetData.PackageName, AssetData);
 

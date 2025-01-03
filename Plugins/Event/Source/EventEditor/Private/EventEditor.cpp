@@ -7,6 +7,7 @@
 #include "NodeAsset/AssetTypeActions_Trigger.h"
 #include "EventEditorStyle.h"
 #include "EventAsset/AssetTypeActions_EventAsset.h"
+#include "NodeAsset/AssetTypeActions_Action.h"
 
 #define LOCTEXT_NAMESPACE "FEventEditorModule"
 
@@ -65,6 +66,10 @@ void FEventEditorModule::RegisterAsset()
 	TSharedPtr<IAssetTypeActions> AssetTypeActions_Output = MakeShareable(new FAssetTypeActions_Output());
 	AssetTools.RegisterAssetTypeActions(AssetTypeActions_Output.ToSharedRef());
 	RegisteredAssetActionsArr.Add(AssetTypeActions_Output);
+
+	TSharedPtr<IAssetTypeActions> AssetTypeActions_Action = MakeShareable(new FAssetTypeActions_Action());
+	AssetTools.RegisterAssetTypeActions(AssetTypeActions_Action.ToSharedRef());
+	RegisteredAssetActionsArr.Add(AssetTypeActions_Action);
 	
 	UE_LOG(LogTemp, Log, TEXT("FEventEditorModule::RegisterAsset 注册资产"));
 }

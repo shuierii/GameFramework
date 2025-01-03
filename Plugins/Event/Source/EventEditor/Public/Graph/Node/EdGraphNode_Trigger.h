@@ -1,9 +1,9 @@
 ﻿#pragma once
-#include "EdGraphNode_Event.h"
+#include "EdGraphNode_Base.h"
 #include "EdGraphNode_Trigger.generated.h"
 
 UCLASS()
-class EVENTEDITOR_API UEdGraphNode_Trigger : public UEdGraphNode_Event
+class EVENTEDITOR_API UEdGraphNode_Trigger : public UEdGraphNode_Base
 {
 	GENERATED_BODY()
 
