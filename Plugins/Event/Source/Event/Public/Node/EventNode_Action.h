@@ -9,4 +9,9 @@ class EVENT_API UEventNode_Action : public UEventNode_Base
 public:
 	virtual FString GetNodeCategory() const override { return TEXT("行动"); };
 	virtual FString GetNodeType() override { return "E_Action"; };
+
+	virtual void ResetConnectData() override
+	{
+		Super::ResetConnectData();
+	};
 };

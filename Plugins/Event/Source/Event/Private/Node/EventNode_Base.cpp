@@ -3,6 +3,7 @@
 UEventNode_Base::UEventNode_Base(const FObjectInitializer& ObjectInitializer)
 {
 	Category = TEXT("None");
+	NodeStyle = EEventNodeStyle::None;
 }
 
 void UEventNode_Base::SetEdGraphNode(UEdGraphNode* NewGraphNode)

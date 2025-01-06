@@ -8,7 +8,18 @@
 #include "Framework/Commands/GenericCommands.h"
 #include "Graph/EventGraphSchema.h"
 #include "..\..\Public\Graph\Node\EdGraphNode_Base.h"
+#include "Graph/Node/EdGraphNode_Dialog.h"
+#include "Graph/Node/EdGraphNode_DialogEvent.h"
+#include "Graph/Node/EdGraphNode_Script.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Node/EventNode_Action.h"
+#include "Node/EventNode_Dialog.h"
+#include "Node/EventNode_DialogEvent.h"
+#include "Node/EventNode_Input.h"
+#include "Node/EventNode_Output.h"
+#include "Node/EventNode_Precondition.h"
+#include "Node/EventNode_Script.h"
+#include "Node/EventNode_Trigger.h"
 
 #define LOCTEXT_NAMESPACE "FEventAssetEditor"
 
@@ -410,6 +421,242 @@ TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_Palette(const FSpawnTabArgs& Ar
 	.Icon(FEditorStyle::GetBrush("Kismet.Tabs.Palette"))
 	.Label(LOCTEXT("EventPaletteTitle", "节点列表"));
 	// TODO
+}
+
+void FEventAssetEditor::BindToolbarCommands()
+{
+}
+
+void FEventAssetEditor::OnExportData()
+{
+}
+
+void FEventAssetEditor::CollectEvent(const FEdGraphEditAction& Action)
+{
+	if (EventAsset == nullptr || EventAsset->Root == nullptr)
+	{
+		return;
+	}
+
+	UEdGraphNode_Base* UEdGraphNode_Root = CastChecked<UEdGraphNode_Base>(EventAsset->Root->GetEdGraphNode());
+	if (UEdGraphNode_Root == nullptr)
+	{
+		return;
+	}
+
+	// 节点数据重置
+	for (auto EdGraphNode : EventAsset->GetGraph()->Nodes)
+	{
+		if (EdGraphNode == nullptr)
+		{
+			continue;
+		}
+
+		auto EventEdGraphNode = Cast<UEdGraphNode_Base>(EdGraphNode);
+		if (EventEdGraphNode == nullptr || EventEdGraphNode->EventNode == nullptr)
+		{
+			continue;
+		}
+
+		EventEdGraphNode->EventNode->ResetConnectData();
+	}
+
+	// collect
+	CollectNode(UEdGraphNode_Root);
+}
+
+void FEventAssetEditor::CollectNode(UEdGraphNode_Base* EdGraphNode)
+{
+	if (EdGraphNode == nullptr || EdGraphNode->EventNode == nullptr)
+	{
+		return;
+	}
+
+	for (auto Pin : EdGraphNode->Pins)
+	{
+		if (Pin == nullptr)
+		{
+			continue;
+		}
+
+		UEdGraphNode_Base* ConnectEdGraphNode = GetConnectEdGraphNode(Pin);
+		if (ConnectEdGraphNode == nullptr)
+		{
+			continue;
+		}
+
+		// 共有部分
+		if (Pin->Direction == EGPD_Input && Pin->PinType.PinSubCategory.IsEqual(FEventNodeTypes::PIN_SUB_TYPE_PUBLIC))
+		{
+			// Input
+			if (ConnectEdGraphNode->EventNode->GetClass()->IsChildOf(UEventNode_Input::StaticClass()))
+			{
+				// 确认 EventNode 的父子关系 EdGraph携带的是父 Pin连线的是子
+				// 子
+				UEventNode_Input* EventNode_Input = CastChecked<UEventNode_Input>(ConnectEdGraphNode->EventNode);
+				EdGraphNode->EventNode->InputList.Add(EventNode_Input);
+				ConnectEdGraphNode->EventNode->Parent = EdGraphNode->EventNode;
+
+				CollectNode(ConnectEdGraphNode);
+			}
+			else
+			{
+				continue;
+			}
+		}
+		else if (Pin->Direction == EGPD_Output && Pin->PinType.PinSubCategory.IsEqual(FEventNodeTypes::PIN_SUB_TYPE_PUBLIC))
+		{
+			// Precondition
+			if (ConnectEdGraphNode->EventNode->GetClass()->IsChildOf(UEventNode_Precondition::StaticClass()))
+			{
+				// 确认 EventNode 的父子关系 EdGraph携带的是父 Pin连线的是子
+				// 子
+				UEventNode_Precondition* EventNode_Precondition = CastChecked<UEventNode_Precondition>(ConnectEdGraphNode->EventNode);
+				EdGraphNode->EventNode->Precondition = EventNode_Precondition;
+				ConnectEdGraphNode->EventNode->Parent = EdGraphNode->EventNode;
+
+				CollectNode(ConnectEdGraphNode);
+			}
+
+			// Output
+			else if (ConnectEdGraphNode->EventNode->GetClass()->IsChildOf(UEventNode_Output::StaticClass()))
+			{
+				// 确认 EventNode 的父子关系 EdGraph携带的是父 Pin连线的是子
+				// 子
+				UEventNode_Output* EventNode_Output = CastChecked<UEventNode_Output>(ConnectEdGraphNode->EventNode);
+				EdGraphNode->EventNode->OutputList.Add(EventNode_Output);
+				ConnectEdGraphNode->EventNode->Parent = EdGraphNode->EventNode;
+
+				CollectNode(ConnectEdGraphNode);
+			}
+			else
+			{
+				continue;
+			}
+		}
+
+		// 私有部分
+		// DialogEvent
+		if (EdGraphNode->GetClass()->IsChildOf(UEdGraphNode_DialogEvent::StaticClass()))
+		{
+			// 确认 EventNode 的父子关系 EdGraph携带的是父 Pin连线的是子
+			// 父
+			UEventNode_DialogEvent* EventNode_DialogEvent = CastChecked<UEventNode_DialogEvent>(EdGraphNode->EventNode);
+
+			// TriggerList
+			if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_TRIGGER))
+			{
+				UEventNode_Trigger* EventNode_Trigger = CastChecked<UEventNode_Trigger>(ConnectEdGraphNode->EventNode);
+				EventNode_DialogEvent->TriggerList.Add(EventNode_Trigger);
+			}
+			// ScriptList
+			else if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_SCRIPT))
+			{
+				UEventNode_Script* EventNode_Script = CastChecked<UEventNode_Script>(ConnectEdGraphNode->EventNode);
+				EventNode_DialogEvent->ScriptList.Add(EventNode_Script);
+			}
+			else
+			{
+				continue;
+			}
+
+			ConnectEdGraphNode->EventNode->Parent = EventNode_DialogEvent;
+
+			CollectNode(ConnectEdGraphNode);
+		}
+		// Script
+		else if (EdGraphNode->GetClass()->IsChildOf(UEdGraphNode_Script::StaticClass()))
+		{
+			// 确认 EventNode 的父子关系 EdGraph携带的是父 Pin连线的是子
+			// 父
+			UEventNode_Script* EventNode_Script = CastChecked<UEventNode_Script>(EdGraphNode->EventNode);
+
+			// Action
+			if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_ACTION))
+			{
+				UEventNode_Action* EventNode_Action = CastChecked<UEventNode_Action>(ConnectEdGraphNode->EventNode);
+				EventNode_Script->ActionOfStartScript = EventNode_Action;
+			}
+			// Dialog
+			else if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_DIALOG))
+			{
+				UEventNode_Dialog* EventNode_Dialog = CastChecked<UEventNode_Dialog>(ConnectEdGraphNode->EventNode);
+				EventNode_Script->Dialog = EventNode_Dialog;
+			}
+			else
+			{
+				continue;
+			}
+
+			ConnectEdGraphNode->EventNode->Parent = EventNode_Script;
+
+			CollectNode(ConnectEdGraphNode);
+		}
+		// Dialog
+		else if (EdGraphNode->GetClass()->IsChildOf(UEdGraphNode_Dialog::StaticClass()))
+		{
+			// 确认 EventNode 的父子关系 EdGraph携带的是父 Pin连线的是子
+			// 父
+			UEventNode_Dialog* EventNode_Dialog = CastChecked<UEventNode_Dialog>(EdGraphNode->EventNode);
+
+			// Action-Enter
+			if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::PIN_DIALOG_ACTION_OF_ENTER))
+			{
+				UEventNode_Action* EventNode_Action = CastChecked<UEventNode_Action>(ConnectEdGraphNode->EventNode);
+				EventNode_Dialog->ActionOfEnter = EventNode_Action;
+			}
+			// Action-Exit
+			else if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::PIN_DIALOG_ACTION_OF_EXIT))
+			{
+				UEventNode_Action* EventNode_Action = CastChecked<UEventNode_Action>(ConnectEdGraphNode->EventNode);
+				EventNode_Dialog->ActionOfExit = EventNode_Action;
+			}
+			// option
+			else if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_DIALOG))
+			{
+				FDialogOption DialogOption;
+				DialogOption.DialogText = EventNode_Dialog->GetOptionContent(Pin->PinId);
+				EventNode_Dialog->DialogOptionList.Add(DialogOption);
+			}
+
+			ConnectEdGraphNode->EventNode->Parent = EventNode_Dialog;
+
+			CollectNode(ConnectEdGraphNode);
+		}
+	}
+}
+
+UEdGraphNode_Base* FEventAssetEditor::GetConnectEdGraphNode(UEdGraphPin* Pin)
+{
+	if (Pin->LinkedTo.Num() <= 0)
+	{
+		return nullptr;
+	}
+
+	if (Pin->LinkedTo.Num() != 1)
+	{
+		UE_LOG(LogTemp, Error, TEXT("the Pin->LinkedTo.Num() is unvalid."));
+
+		return nullptr;
+	}
+
+	UEdGraphPin* ConnectPin = Pin->LinkedTo[0];
+	if (ConnectPin == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("the TriggerOutPin is unvalid."));
+
+		return nullptr;
+	}
+
+	UEdGraphNode_Base* ConnectEdGraphNode = CastChecked<UEdGraphNode_Base>(ConnectPin->GetOwningNode());
+	if (ConnectEdGraphNode == nullptr || ConnectEdGraphNode->EventNode == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("the ConnectEdGraphNode is unvalid."));
+
+		return nullptr;
+	}
+
+	return ConnectEdGraphNode;
 }
 
 FEventAssetEditor::FEventAssetEditor(): EventAsset(nullptr)

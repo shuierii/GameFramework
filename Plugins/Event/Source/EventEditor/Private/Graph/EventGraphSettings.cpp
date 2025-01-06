@@ -25,4 +25,12 @@ UEventGraphSettings::UEventGraphSettings(const FObjectInitializer& ObjectInitial
 	
 	NodeTitleColors.Emplace(EEventNodeStyle::Input, FColor::FromHex("00ff7f")); // 适中的春天的绿色
 	NodeTitleColors.Emplace(EEventNodeStyle::Output, FColor::FromHex("ff00ff")); // 洋红
+
+	NodeTitleColors.Emplace(EEventNodeStyle::DialogEvent, FColor::FromHex("d71345")); // 红色
+
+	NodeTitleColors.Emplace(EEventNodeStyle::Dialog, FColor::FromHex("40e0D0")); // 绿宝石
+	
+	NodeTitleColors.Emplace(EEventNodeStyle::Action, FColor::FromHex("8552a1")); // 紫
+
+	NodeTitleColors.Emplace(EEventNodeStyle::Script, FColor::FromHex("ffff00")); // 纯黄
 }

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Node/EventNode_Base.h"
+#include "Node/EventNode_EventRoot.h"
 
 #include "EventAsset.generated.h"
 
@@ -14,4 +15,7 @@ public:
 public:
 	UPROPERTY()
 	UEdGraph* EventGraph;
+
+	UPROPERTY()
+	UEventNode_EventRoot* Root;
 };

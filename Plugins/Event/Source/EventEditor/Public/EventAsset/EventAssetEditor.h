@@ -59,6 +59,17 @@ private:
 	TSharedRef<SDockTab> SpawnTab_GraphCanvas(const FSpawnTabArgs& Args) const;
 	TSharedRef<SDockTab> SpawnTab_Palette(const FSpawnTabArgs& Args) const;
 
+	// 工具栏
+	void BindToolbarCommands();
+	void OnExportData();
+	// END
+
+	// 收集数据
+	void CollectEvent(const FEdGraphEditAction& Action);
+	void CollectNode(UEdGraphNode_Base* EdGraphNode);
+	UEdGraphNode_Base* GetConnectEdGraphNode(UEdGraphPin* Pin);
+	// END
+
 public:
 	static const FName GraphTab;
 	static const FName DetailsTab;

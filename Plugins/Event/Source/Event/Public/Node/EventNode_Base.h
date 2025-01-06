@@ -3,6 +3,10 @@
 
 #include "EventNode_Base.generated.h"
 
+class UEventNode_Input;
+class UEventNode_Precondition;
+class UEventNode_Output;
+
 UCLASS(Abstract)
 class EVENT_API UEventNode_Base : public UObject
 {
@@ -20,6 +24,26 @@ public:
 	virtual FString GetNodeType();
 	UFUNCTION(BlueprintImplementableEvent)
 	FString GetNodeType_Blueprint();
+
+	virtual void ResetConnectData()
+	{
+		InputList.Empty();
+		Precondition = nullptr;
+		OutputList.Empty();
+	}
+
+public:
+	UPROPERTY(Transient) // Transient 修饰，标识此属性不会被序列化即不会被保存到磁盘上
+	UEventNode_Base* Parent;
+
+	UPROPERTY()
+	TArray<UEventNode_Input*> InputList;
+
+	UPROPERTY()
+	UEventNode_Precondition* Precondition;
+
+	UPROPERTY()
+	TArray<UEventNode_Output*> OutputList;
 
 protected:
 	UPROPERTY()
