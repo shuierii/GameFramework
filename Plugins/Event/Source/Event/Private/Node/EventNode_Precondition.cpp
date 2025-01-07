@@ -2,6 +2,8 @@
 
 UEventNode_Precondition::UEventNode_Precondition(const FObjectInitializer& ObjectInitializer)
 {
+	Category = TEXT("Precondition");
+	NodeStyle = EEventNodeStyle::Precondition;
 }
 
 FString UEventNode_Precondition::GetNodeCategory() const

@@ -2,6 +2,8 @@
 
 UEventNode_Input::UEventNode_Input(const FObjectInitializer& ObjectInitializer)
 {
+	Category = TEXT("Input");
+	NodeStyle = EEventNodeStyle::Input;
 }
 
 FString UEventNode_Input::GetNodeCategory() const

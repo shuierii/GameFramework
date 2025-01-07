@@ -16,7 +16,7 @@ UEdGraphNode* FEventGraphSchemaActions_NewNode::PerformAction(UEdGraph* ParentGr
 	if (NodeClass)
 	{
 		UE_LOG(LogTemp, Log, TEXT("节点列表点击创建节点"));
-		
+
 		return CreateEdGraphNode(NodeClass, ParentGraph, FromPin, Location, bSelectNewNode);
 	}
 
@@ -27,9 +27,18 @@ UEdGraphNode_Base* FEventGraphSchemaActions_NewNode::CreateEdGraphNode(const UCl
 {
 	check(InNodeClass);
 
+	UEventAsset* EventAsset = CastChecked<UEventGraph>(ParentGraph)->GetEventAsset();
+
+	if (NodeClass->IsChildOf(UEventNode_EventRoot::StaticClass()) && EventAsset->Root != nullptr)
+	{
+		FString Msg = TEXT("已经存在【事件】，如果需要更改的话，请先删除再添加!");
+		EventAsset->OnGraphEditorNotification.ExecuteIfBound(Msg);
+		
+		return nullptr;
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("创建编辑器节点"));
 	
-	UEventAsset* EventAsset = CastChecked<UEventGraph>(ParentGraph)->GetEventAsset();
 	GEditor->BeginTransaction(LOCTEXT("AddNode", "Add Node"));
 	ParentGraph->Modify();
 	if (FromPin)
@@ -50,6 +59,11 @@ UEdGraphNode_Base* FEventGraphSchemaActions_NewNode::CreateEdGraphNode(const UCl
 	// 创建EventNode
 	UEventNode_Base* NewNode = EventAsset->CreateNode(InNodeClass, NewEdGraphNode);
 	NewEdGraphNode->SetEventNode(NewNode);
+
+	if (NodeClass->IsChildOf(UEventNode_EventRoot::StaticClass()))
+	{
+		EventAsset->Root = CastChecked<UEventNode_EventRoot>(NewNode);
+	}
 
 	// 属性规则
 	NewEdGraphNode->PostPlacedNewNode();

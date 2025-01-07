@@ -9,5 +9,4 @@ class EVENT_API UEventNode_Precondition : public UEventNode_Base
 	GENERATED_UCLASS_BODY()
 public:
 	virtual FString GetNodeCategory() const override;
-	virtual FString GetNodeType() override { return "E_Precondition"; };
 };

@@ -30,7 +30,8 @@ public class EventEditor : ModuleRules
 				"KismetWidgets",
 				"Projects",
 				"DeveloperSettings",
-				"ApplicationCore"
+				"ApplicationCore",
+				"TableUtility"
 			}
 		);
 	}

@@ -28,7 +28,7 @@ public:
 
 	UPROPERTY()
 	UEventNode_Action* ActionOfExit;
-
+	
 	UPROPERTY()
 	TArray<FDialogOption> DialogOptionList;
 };

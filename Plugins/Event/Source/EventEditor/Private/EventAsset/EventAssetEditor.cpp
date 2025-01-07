@@ -1,8 +1,11 @@
 ﻿#include "EventAsset/EventAssetEditor.h"
 
+#include <string>
+
 #include "EdGraphUtilities.h"
 #include "EventAsset.h"
 #include "EventEditorCommands.h"
+#include "GraphEditAction.h"
 #include "GraphEditorActions.h"
 #include "ToolMenus.h"
 #include "Framework/Commands/GenericCommands.h"
@@ -12,6 +15,7 @@
 #include "Graph/Node/EdGraphNode_DialogEvent.h"
 #include "Graph/Node/EdGraphNode_Script.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Misc/FileHelper.h"
 #include "Node/EventNode_Action.h"
 #include "Node/EventNode_Dialog.h"
 #include "Node/EventNode_DialogEvent.h"
@@ -20,6 +24,11 @@
 #include "Node/EventNode_Precondition.h"
 #include "Node/EventNode_Script.h"
 #include "Node/EventNode_Trigger.h"
+#include "Value/NIArray.h"
+#include "Value/NIInt.h"
+#include "Value/NIString.h"
+#include "Value/NIUtility.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 #define LOCTEXT_NAMESPACE "FEventAssetEditor"
 
@@ -32,6 +41,9 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 	UE_LOG(LogTemp, Log, TEXT("初始化编辑器"));
 
 	EventAsset = CastChecked<UEventAsset>(ObjectToEditor);
+
+	// TIPS提示
+	EventAsset->OnGraphEditorNotification.BindSP(this, &FEventAssetEditor::OnGraphEditorNotification);
 
 	// 注册引脚连接委托
 	UEventGraphSchema::OnPinConnection.BindSP(this, &FEventAssetEditor::OnPinConnectionFunc);
@@ -46,6 +58,7 @@ void FEventAssetEditor::InitEventAssetEditor(const EToolkitMode::Type Mode, cons
 	BindGraphCommands();
 
 	// 工具栏
+	BindToolbarCommands();
 	CreateToolbar();
 
 	// 绘制内容分块
@@ -143,7 +156,7 @@ void FEventAssetEditor::CreateToolbar()
 
 	if (ToolMenu)
 	{
-		// TODO
+		EventToolbar = MakeShareable(new FEventAssetToolbar(ToolMenu));
 	}
 }
 
@@ -425,10 +438,27 @@ TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_Palette(const FSpawnTabArgs& Ar
 
 void FEventAssetEditor::BindToolbarCommands()
 {
+	FEventToolbarCommands::Register();
+	const FEventToolbarCommands& ToolbarCommands = FEventToolbarCommands::Get();
+
+	// ExportData
+	ToolkitCommands->MapAction(ToolbarCommands.ExportData, FExecuteAction::CreateSP(this,
+	                                                                                &FEventAssetEditor::OnExportData));
 }
 
 void FEventAssetEditor::OnExportData()
 {
+	FEdGraphEditAction Action;
+	CollectEvent(Action);
+
+	FAssetEditorToolkit::SaveAsset_Execute(); // 执行工具栏保存按钮操作
+
+	TArray<FNotificationInfo> MsgList;
+	bool Ret = ExportData(MsgList);
+	for (auto Msg : MsgList)
+	{
+		FocusedGraphEditor->AddNotification(Msg, Ret);
+	}
 }
 
 void FEventAssetEditor::CollectEvent(const FEdGraphEditAction& Action)
@@ -599,29 +629,34 @@ void FEventAssetEditor::CollectNode(UEdGraphNode_Base* EdGraphNode)
 			// 父
 			UEventNode_Dialog* EventNode_Dialog = CastChecked<UEventNode_Dialog>(EdGraphNode->EventNode);
 
+			ConnectEdGraphNode->EventNode->Parent = EventNode_Dialog;
+
 			// Action-Enter
 			if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::PIN_DIALOG_ACTION_OF_ENTER))
 			{
 				UEventNode_Action* EventNode_Action = CastChecked<UEventNode_Action>(ConnectEdGraphNode->EventNode);
 				EventNode_Dialog->ActionOfEnter = EventNode_Action;
+
+				EventNode_Action->Parent = EventNode_Dialog;
+				CollectNode(ConnectEdGraphNode);
 			}
 			// Action-Exit
 			else if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::PIN_DIALOG_ACTION_OF_EXIT))
 			{
 				UEventNode_Action* EventNode_Action = CastChecked<UEventNode_Action>(ConnectEdGraphNode->EventNode);
 				EventNode_Dialog->ActionOfExit = EventNode_Action;
+
+				EventNode_Action->Parent = EventNode_Dialog;
+				CollectNode(ConnectEdGraphNode);
 			}
+
 			// option
-			else if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_DIALOG))
+			if (Pin->PinType.PinCategory.IsEqual(FEventNodeTypes::NODE_TYPE_DIALOG))
 			{
 				FDialogOption DialogOption;
 				DialogOption.DialogText = EventNode_Dialog->GetOptionContent(Pin->PinId);
 				EventNode_Dialog->DialogOptionList.Add(DialogOption);
 			}
-
-			ConnectEdGraphNode->EventNode->Parent = EventNode_Dialog;
-
-			CollectNode(ConnectEdGraphNode);
 		}
 	}
 }
@@ -657,6 +692,397 @@ UEdGraphNode_Base* FEventAssetEditor::GetConnectEdGraphNode(UEdGraphPin* Pin)
 	}
 
 	return ConnectEdGraphNode;
+}
+
+bool FEventAssetEditor::ExportData(TArray<FNotificationInfo>& MsgList)
+{
+	if (EventAsset == nullptr || EventAsset->Root == nullptr)
+	{
+		FNotificationInfo Info(LOCTEXT("ExportData_Root", "没有Root节点"));
+		Info.bUseLargeFont = true;
+		Info.ExpireDuration = 3.0f;
+
+		MsgList.Add(Info);
+
+		return false;
+	}
+
+	UEventNode_EventRoot* EventNode_Root = CastChecked<UEventNode_EventRoot>(EventAsset->Root);
+	if (EventNode_Root == nullptr)
+	{
+		FNotificationInfo Info(LOCTEXT("ExportData_Root", "Root节点无效"));
+		Info.bUseLargeFont = true;
+		Info.ExpireDuration = 3.0f;
+
+		MsgList.Add(Info);
+
+		return false;
+	}
+
+	UNIMap* EventData = ExportData_Node(EventNode_Root, MsgList);
+	if (EventData == nullptr)
+	{
+		return false;
+	}
+
+	// 数据转成json
+	FString DataStr = UNIUtility::ConvertToString(EventData);
+	if (DataStr.Len() <= 0)
+	{
+		FNotificationInfo Info(LOCTEXT("ExportData_To_Json", "转换json文件失败,存在格式不正确"));
+		Info.bUseLargeFont = true;
+		Info.ExpireDuration = 3.0f;
+
+		MsgList.Add(Info);
+
+		return false;
+	}
+
+	// 保存文件到路径
+	// "../../../../Etc/Event/Event_1.json"
+	FString FileName = EventAsset->GetName();
+	FString FilePath = FPaths::ProjectContentDir() + "Etc/Event/" + FileName + ".json";
+
+	if (!FFileHelper::SaveStringToFile(DataStr, *FilePath))
+	{
+		FNotificationInfo Info(FText::Format(LOCTEXT("ExportData_Save_File", "事件文件({0}) 存储失败."), FText::FromString(EventAsset->GetName())));
+		Info.bUseLargeFont = true;
+		Info.ExpireDuration = 3.0f;
+
+		MsgList.Add(Info);
+
+		return false;
+	}
+
+	FNotificationInfo Info(FText::Format(LOCTEXT("ExportData_Save_File", "事件文件({0}) 导出成功."), FText::FromString(EventAsset->GetName())));
+	Info.bUseLargeFont = true;
+	Info.ExpireDuration = 3.0f;
+
+	MsgList.Add(Info);
+
+	return true;
+}
+
+UNIMap* FEventAssetEditor::ExportData_Node(UEventNode_Base* Node, TArray<FNotificationInfo>& MsgList)
+{
+	if (Node == nullptr)
+	{
+		return nullptr;
+	}
+
+	UNIMap* NodeData = UNIValue::CreateMap();
+
+	// type
+	FString NodeType = Node->GetNodeType();
+	if (NodeType.Len() <= 0)
+	{
+		FNotificationInfo Info(FText::Format(LOCTEXT("ExportData_Node_Type", "节点({0})： type 无效."), FText::FromString(Node->GetClass()->GetDisplayNameText().ToString())));
+		Info.bUseLargeFont = true;
+		Info.ExpireDuration = 3.0f;
+
+		MsgList.Add(Info);
+
+		return nullptr;
+	}
+
+	NodeData->AddBySKey("type", UNIValue::CreateString(NodeType));
+
+	// field
+
+	// properties
+
+	// input_list
+	UNIArray* InputDataList = UNIValue::CreateArray();
+	for (auto ChildNode : Node->InputList)
+	{
+		if (ChildNode == nullptr)
+		{
+			FNotificationInfo Info(LOCTEXT("ExportData_Node_Input", "输入器无效"));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		auto ChildNodeData = ExportData_Node(ChildNode, MsgList);
+		if (ChildNodeData == nullptr)
+		{
+			FNotificationInfo Info(LOCTEXT("ExportData_Node_Input", "输入器导出失败"));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		InputDataList->Add(ChildNodeData);
+	}
+
+	NodeData->AddBySKey("input_list", InputDataList);
+
+	// precondition
+	if (Node->Precondition)
+	{
+		auto PreconditionNodeData = ExportData_Node(Node->Precondition, MsgList);
+		if (PreconditionNodeData == nullptr)
+		{
+			FNotificationInfo Info(FText::Format(LOCTEXT("ExportData_Node_Precondition", "节点({0})： 前置条件导出失败."), FText::FromString(Node->GetClass()->GetDisplayNameText().ToString())));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		NodeData->AddBySKey("precondition", PreconditionNodeData);
+	}
+
+	// output_list
+	UNIArray* OutputDataList = UNIValue::CreateArray();
+	for (auto ChildNode : Node->OutputList)
+	{
+		if (ChildNode == nullptr)
+		{
+			FNotificationInfo Info(LOCTEXT("ExportData_Node_Output", "输出器无效"));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		auto ChildNodeData = ExportData_Node(ChildNode, MsgList);
+		if (ChildNodeData == nullptr)
+		{
+			FNotificationInfo Info(LOCTEXT("ExportData_Node_Output", "输出器导出失败"));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		OutputDataList->Add(ChildNodeData);
+	}
+
+	NodeData->AddBySKey("output_list", OutputDataList);
+
+	// Root
+	if (Node->GetClass()->IsChildOf(UEventNode_EventRoot::StaticClass()))
+	{
+		UEventNode_EventRoot* EventNode_Root = CastChecked<UEventNode_EventRoot>(Node);
+
+		// id
+		FString NameStr;
+		FString EventIDStr;
+		EventAsset->GetName().Split(TEXT("_"), &NameStr, &EventIDStr);
+		int32 EventID = FCString::Atoi(*EventIDStr);
+		NodeData->AddBySKey("id", UNIValue::CreateInt(EventID));
+
+		// trigger_list
+		UNIArray* TriggerDataList = UNIValue::CreateArray();
+		if (EventNode_Root->TriggerList.Num() > 0)
+		{
+			for (auto TriggerNode : EventNode_Root->TriggerList)
+			{
+				if (TriggerNode == nullptr)
+				{
+					continue;
+				}
+
+				auto TriggerNodeData = ExportData_Node(TriggerNode, MsgList);
+				if (TriggerNodeData == nullptr)
+				{
+					FNotificationInfo Info(LOCTEXT("ExportData_Node_Trigger", "【触发器】数据导出失败"));
+					Info.bUseLargeFont = true;
+					Info.ExpireDuration = 3.0f;
+
+					MsgList.Add(Info);
+
+					return nullptr;
+				}
+
+				TriggerDataList->Add(TriggerNodeData);
+			}
+
+			NodeData->AddBySKey("trigger_list", TriggerDataList);
+		}
+
+		// dialog_event
+		if (Node->GetClass()->IsChildOf(UEventNode_DialogEvent::StaticClass()))
+		{
+			UEventNode_DialogEvent* EventNode_DialogEvent = CastChecked<UEventNode_DialogEvent>(Node);
+			// script_list
+			UNIArray* ScriptDataList = UNIValue::CreateArray();
+			if (EventNode_DialogEvent->ScriptList.Num() > 0)
+			{
+				for (auto ScriptNode : EventNode_DialogEvent->ScriptList)
+				{
+					if (ScriptNode == nullptr)
+					{
+						continue;
+					}
+
+					auto ScriptNodeData = ExportData_Node(ScriptNode, MsgList);
+					if (ScriptNodeData == nullptr)
+					{
+						FNotificationInfo Info(LOCTEXT("ExportData_Node_Script", "【剧本】数据导出失败"));
+						Info.bUseLargeFont = true;
+						Info.ExpireDuration = 3.0f;
+
+						MsgList.Add(Info);
+
+						return nullptr;
+					}
+
+					ScriptDataList->Add(ScriptNodeData);
+				}
+
+				NodeData->AddBySKey("script_list", ScriptDataList);
+			}
+		}
+	}
+	else if (Node->GetClass()->IsChildOf(UEventNode_Input::StaticClass()))
+	{
+		UEventNode_Input* EventNode_Input = CastChecked<UEventNode_Input>(Node);
+
+		// field
+		if (EventNode_Input->Field.IsEmpty())
+		{
+			FNotificationInfo Info(LOCTEXT("ExportData_Node_Input", "【输入器】field是空的"));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		NodeData->AddBySKey("field", UNIValue::CreateString(EventNode_Input->Field));
+	}
+	// Output
+	else if (Node->GetClass()->IsChildOf(UEventNode_Output::StaticClass()))
+	{
+		UEventNode_Output* EventNode_Output = CastChecked<UEventNode_Output>(Node);
+
+		// field
+		if (EventNode_Output->Field.IsEmpty())
+		{
+			FNotificationInfo Info(LOCTEXT("ExportData_Node_Output", "【输出器】field是空的"));
+			Info.bUseLargeFont = true;
+			Info.ExpireDuration = 3.0f;
+
+			MsgList.Add(Info);
+
+			return nullptr;
+		}
+
+		NodeData->AddBySKey("field", UNIValue::CreateString(EventNode_Output->Field));
+	}
+	// Script
+	else if (Node->GetClass()->IsChildOf(UEventNode_Script::StaticClass()))
+	{
+		UEventNode_Script* EventNode_Script = CastChecked<UEventNode_Script>(Node);
+
+		// action_of_start_script
+		if (EventNode_Script->ActionOfStartScript != nullptr)
+		{
+			auto ActionOfStartScriptData = ExportData_Node(EventNode_Script->ActionOfStartScript, MsgList);
+			if (ActionOfStartScriptData == nullptr)
+			{
+				FNotificationInfo Info(LOCTEXT("ExportData_Node_Script", "【剧本】行动导出数据错误."));
+				Info.bUseLargeFont = true;
+				Info.ExpireDuration = 3.0f;
+
+				MsgList.Add(Info);
+
+				return nullptr;
+			}
+
+			NodeData->AddBySKey("action_of_start_script", ActionOfStartScriptData);
+		}
+
+		// dialog
+		if (EventNode_Script->Dialog != nullptr)
+		{
+			auto DialogNodData = ExportData_Node(EventNode_Script->Dialog, MsgList);
+			if (DialogNodData == nullptr)
+			{
+				FNotificationInfo Info(LOCTEXT("ExportData_Node_Script", "【对话】数据导出失败."));
+				Info.bUseLargeFont = true;
+				Info.ExpireDuration = 3.0f;
+
+				MsgList.Add(Info);
+
+				return nullptr;
+			}
+
+			NodeData->AddBySKey("dialog", DialogNodData);
+		}
+	}
+	// Dialog
+	else if (Node->GetClass()->IsChildOf(UEventNode_Dialog::StaticClass()))
+	{
+		UEventNode_Dialog* EventNode_Dialog = CastChecked<UEventNode_Dialog>(Node);
+
+		// action_of_enter
+		if (EventNode_Dialog->ActionOfEnter != nullptr)
+		{
+			auto ActionOfEnterData = ExportData_Node(EventNode_Dialog->ActionOfEnter, MsgList);
+			if (ActionOfEnterData == nullptr)
+			{
+				FNotificationInfo Info(LOCTEXT("ExportData_Node_Dialog", "【对话】行动导出数据错误."));
+				Info.bUseLargeFont = true;
+				Info.ExpireDuration = 3.0f;
+
+				MsgList.Add(Info);
+
+				return nullptr;
+			}
+
+			NodeData->AddBySKey("action_of_enter", ActionOfEnterData);
+		}
+
+		// action_of_exit
+		if (EventNode_Dialog->ActionOfExit != nullptr)
+		{
+			auto ActionOfExitData = ExportData_Node(EventNode_Dialog->ActionOfExit, MsgList);
+			if (ActionOfExitData == nullptr)
+			{
+				FNotificationInfo Info(LOCTEXT("ExportData_Node_Dialog", "【对话】行动导出数据错误."));
+				Info.bUseLargeFont = true;
+				Info.ExpireDuration = 3.0f;
+
+				MsgList.Add(Info);
+
+				return nullptr;
+			}
+
+			NodeData->AddBySKey("action_of_exit", ActionOfExitData);
+		}
+
+		// option_list
+		if (EventNode_Dialog->DialogOptionList.Num() > 0)
+		{
+		}
+	}
+
+	return NodeData;
+}
+
+void FEventAssetEditor::OnGraphEditorNotification(FString& Msg)
+{
+	FNotificationInfo Info(FText::Format(LOCTEXT("Common_Tips", "{0}"), FText::FromString(Msg)));
+	Info.bUseLargeFont = true;
+	Info.ExpireDuration = 3.0f;
+
+	FocusedGraphEditor->AddNotification(Info, false);
 }
 
 FEventAssetEditor::FEventAssetEditor(): EventAsset(nullptr)

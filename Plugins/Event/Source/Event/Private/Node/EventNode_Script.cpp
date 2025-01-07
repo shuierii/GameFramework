@@ -2,7 +2,8 @@
 
 UEventNode_Script::UEventNode_Script(const FObjectInitializer& ObjectInitializer)
 {
-	
+	Category = TEXT("Script");
+	NodeStyle = EEventNodeStyle::Script;
 }
 
 FString UEventNode_Script::GetNodeCategory() const

@@ -2,4 +2,6 @@
 
 UEventNode_DialogEvent::UEventNode_DialogEvent(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
 {
+	Category = TEXT("DialogEvent");
+	NodeStyle = EEventNodeStyle::DialogEvent;
 }

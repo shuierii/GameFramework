@@ -2,6 +2,8 @@
 
 UEventNode_Trigger::UEventNode_Trigger(const FObjectInitializer& ObjectInitializer)
 {
+	Category = TEXT("Trigger");
+	NodeStyle = EEventNodeStyle::Trigger;
 }
 
 FString UEventNode_Trigger::GetNodeCategory() const

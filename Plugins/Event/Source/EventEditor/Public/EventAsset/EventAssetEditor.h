@@ -1,7 +1,11 @@
 ﻿#pragma once
+#include "EventAssetToolbar.h"
 #include "..\Graph\Node\EdGraphNode_Base.h"
+#include "Value/NIMap.h"
 
 class UEventAsset;
+struct FEdGraphEditAction;
+class UNIMap;
 
 class EVENTEDITOR_API FEventAssetEditor : public FAssetEditorToolkit
 {
@@ -25,7 +29,6 @@ public:
 
 private:
 	void CreateWidgets(); // 创建事件编辑器界面
-	void CreateToolbar(); // 创建工具栏
 	TSharedRef<SGraphEditor> CreateGraphWidget(); // 创建图表面板
 	void BindGraphCommands(); // 绑定图标操作指令，如复制,跳转蓝图定义等
 	void OnPinConnectionFunc(UEdGraphPin* A, UEdGraphPin* B);
@@ -60,6 +63,7 @@ private:
 	TSharedRef<SDockTab> SpawnTab_Palette(const FSpawnTabArgs& Args) const;
 
 	// 工具栏
+	void CreateToolbar(); // 创建工具栏
 	void BindToolbarCommands();
 	void OnExportData();
 	// END
@@ -68,7 +72,12 @@ private:
 	void CollectEvent(const FEdGraphEditAction& Action);
 	void CollectNode(UEdGraphNode_Base* EdGraphNode);
 	UEdGraphNode_Base* GetConnectEdGraphNode(UEdGraphPin* Pin);
+
+	bool ExportData(TArray<FNotificationInfo>& MsgList);
+	UNIMap* ExportData_Node(UEventNode_Base* Node, TArray<FNotificationInfo>& MsgList);
 	// END
+
+	void OnGraphEditorNotification(FString& Msg);
 
 public:
 	static const FName GraphTab;
@@ -79,4 +88,6 @@ private:
 	UEventAsset* EventAsset;
 	TSharedPtr<IDetailsView> DetailsView;
 	TSharedPtr<SGraphEditor> FocusedGraphEditor;
+
+	TSharedPtr<class FEventAssetToolbar> EventToolbar;
 };

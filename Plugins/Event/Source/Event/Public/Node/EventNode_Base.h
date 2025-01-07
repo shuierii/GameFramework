@@ -22,8 +22,6 @@ public:
 	EEventNodeStyle GetNodeStyle() const { return NodeStyle; }
 
 	virtual FString GetNodeType();
-	UFUNCTION(BlueprintImplementableEvent)
-	FString GetNodeType_Blueprint();
 
 	virtual void ResetConnectData()
 	{

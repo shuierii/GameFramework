@@ -51,5 +51,10 @@ FText UEventNode_Base::GetNodeToolTip() const
 
 FString UEventNode_Base::GetNodeType()
 {
-	return GetNodeType_Blueprint();
+	int32 lastIndex;
+	FString nodeName = GetClass()->GetName();
+	nodeName.FindLastChar('_', lastIndex);
+	nodeName.RemoveAt(lastIndex, nodeName.Len() - lastIndex);
+
+	return nodeName;
 }

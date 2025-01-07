@@ -4,6 +4,9 @@
 
 #include "EventAsset.generated.h"
 
+// 编辑器信息通知
+DECLARE_DELEGATE_OneParam(FOnGraphEditorNotification, FString&);
+
 UCLASS(BlueprintType)
 class EVENT_API UEventAsset : public UObject
 {
@@ -18,4 +21,6 @@ public:
 
 	UPROPERTY()
 	UEventNode_EventRoot* Root;
+
+	FOnGraphEditorNotification OnGraphEditorNotification;
 };
