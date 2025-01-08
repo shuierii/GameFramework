@@ -1,19 +1,21 @@
 ﻿#pragma once
 #include "EventAssetToolbar.h"
 #include "..\Graph\Node\EdGraphNode_Base.h"
+#include "Graph/Widget/EventPalette.h"
 #include "Value/NIMap.h"
 
 class UEventAsset;
 struct FEdGraphEditAction;
 class UNIMap;
+class SEventPalette;
 
-class EVENTEDITOR_API FEventAssetEditor : public FAssetEditorToolkit
+class EVENTEDITOR_API FEventAssetEditor : public FAssetEditorToolkit, public FNotifyHook
 {
 public:
 	FEventAssetEditor();
 	~FEventAssetEditor();
 
-	// AssetEditorToolkit
+	// FAssetEditorToolkit
 	virtual FName GetToolkitFName() const override;
 	virtual FText GetBaseToolkitName() const override;
 	virtual FString GetWorldCentricTabPrefix() const override;
@@ -22,9 +24,13 @@ public:
 	virtual void UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
 	// END
 
+	// FNotifyHook
+	virtual void NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged) override;
+	// END
+
 public:
 	void InitEventAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UObject* ObjectToEditor);
-
+	UEventAsset* GetEventAsset() const { return EventAsset; }
 	TSet<UEdGraphNode_Base*> GetSelectedEventNodes() const;
 
 private:
@@ -33,6 +39,7 @@ private:
 	void BindGraphCommands(); // 绑定图标操作指令，如复制,跳转蓝图定义等
 	void OnPinConnectionFunc(UEdGraphPin* A, UEdGraphPin* B);
 
+	void OnSelectedNodesChanged(const TSet<UObject*>& Nodes);
 	void OnNodeDoubleClicked(UEdGraphNode* Node);
 	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 
@@ -87,6 +94,7 @@ public:
 private:
 	UEventAsset* EventAsset;
 	TSharedPtr<IDetailsView> DetailsView;
+	TSharedPtr<SEventPalette> Palette;
 	TSharedPtr<SGraphEditor> FocusedGraphEditor;
 
 	TSharedPtr<class FEventAssetToolbar> EventToolbar;

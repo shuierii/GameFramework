@@ -15,6 +15,7 @@
 #include "Graph/Node/EdGraphNode_Precondition.h"
 #include "Graph/Node/EdGraphNode_Script.h"
 #include "Graph/Node/EdGraphNode_Trigger.h"
+#include "Misc/HotReloadInterface.h"
 #include "Node/EventNode_Action.h"
 #include "Node/EventNode_Dialog.h"
 #include "Node/EventNode_DialogEvent.h"
@@ -31,6 +32,7 @@ TMap<UClass*, UClass*> UEventGraphSchema::AssignedEdGraphNodeClasses; // <EventN
 TMap<FName, FAssetData> UEventGraphSchema::BlueprintEventNodes; // <资产名，蓝图资产>
 
 FOnPinConnection UEventGraphSchema::OnPinConnection;
+FEventGraphSchemaRefresh UEventGraphSchema::OnNodeListChanged;
 
 void UEventGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
@@ -88,6 +90,16 @@ void UEventGraphSchema::BindAssetChangeActions()
 	AssetRegistry.OnFilesLoaded().AddStatic(&UEventGraphSchema::GatherEventNodes);
 	AssetRegistry.OnAssetAdded().AddStatic(&UEventGraphSchema::OnAssetAdded);
 	AssetRegistry.OnAssetRemoved().AddStatic(&UEventGraphSchema::OnAssetRemoved);
+
+	// 允许在不重开编辑器的情况下，编译重载（比如节点蓝图更改）
+	IHotReloadInterface& HotReloadInterface = FModuleManager::LoadModuleChecked<IHotReloadInterface>("HotReload");
+	HotReloadInterface.OnHotReload().AddStatic([](bool bWasTriggeredAutomatically) { GatherEventNodes(); });
+
+	// 蓝图编译触发
+	if (GEditor)
+	{
+		GEditor->OnBlueprintCompiled().AddStatic([]() { GatherEventNodes(); });
+	}
 }
 
 UClass* UEventGraphSchema::GetAssignedEdGraphNodeClass(const UClass* EventNodeClass)
@@ -108,6 +120,64 @@ UClass* UEventGraphSchema::GetAssignedEdGraphNodeClass(const UClass* EventNodeCl
 	return UEdGraphNode_Base::StaticClass();
 }
 
+TArray<TSharedPtr<FString>> UEventGraphSchema::GetEventNodeCategories()
+{
+	if (NativeEventNodes.Num() == 0)
+	{
+		GatherEventNodes();
+	}
+
+	TSet<FString> UnsortedCategories;
+	for (const UClass* EventNodeClass : NativeEventNodes)
+	{
+		if (const UEventNode_Base* DefaultObject = EventNodeClass->GetDefaultObject<UEventNode_Base>())
+		{
+			UnsortedCategories.Emplace(DefaultObject->GetNodeCategory());
+		}
+	}
+
+	for (const TPair<FName, FAssetData>& AssetData : BlueprintEventNodes)
+	{
+		if (const UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.Value.GetAsset()))
+		{
+			if (Blueprint->BlueprintCategory.IsEmpty())
+			{
+				auto DefaultObject = Blueprint->GeneratedClass->GetDefaultObject<UEventNode_Base>();
+				if (DefaultObject == nullptr)
+				{
+					continue;
+				}
+
+				UnsortedCategories.Emplace(DefaultObject->GetNodeCategory());
+			}
+			else
+			{
+				UnsortedCategories.Emplace(Blueprint->BlueprintCategory);
+			}
+		}
+	}
+
+	TArray<FString> SortedCategories = UnsortedCategories.Array();
+	SortedCategories.Sort();
+
+	// create list of categories
+	TArray<TSharedPtr<FString>> Result;
+	for (const FString& Category : SortedCategories)
+	{
+		if (!Category.IsEmpty())
+		{
+			Result.Emplace(MakeShareable(new FString(Category)));
+		}
+	}
+
+	return Result;
+}
+
+void UEventGraphSchema::GetPaletteActions(FGraphActionMenuBuilder& ActionMenuBuilder)
+{
+	BindEventNodeActions(ActionMenuBuilder);
+}
+
 void UEventGraphSchema::BindEventNodeActions(FGraphActionMenuBuilder& ActionMenuBuilder)
 {
 	if (NativeEventNodes.Num() == 0)
@@ -121,6 +191,11 @@ void UEventGraphSchema::BindEventNodeActions(FGraphActionMenuBuilder& ActionMenu
 
 		for (const UClass* EventNodeClass : NativeEventNodes)
 		{
+			if (EventNodeClass == nullptr)
+			{
+				continue;
+			}
+
 			UEventNode_Base* NodeDefault = EventNodeClass->GetDefaultObject<UEventNode_Base>();
 			FilteredNodes.Emplace(NodeDefault);
 		}
@@ -130,6 +205,11 @@ void UEventGraphSchema::BindEventNodeActions(FGraphActionMenuBuilder& ActionMenu
 			if (const UBlueprint* Blueprint = Cast<UBlueprint>(AssetData.Value.GetAsset()))
 			{
 				UClass* EventNodeClass = Blueprint->GeneratedClass;
+				if (EventNodeClass->HasAnyClassFlags(CLASS_Abstract | CLASS_NotPlaceable | CLASS_Deprecated))
+				{
+					continue;
+				}
+
 				UEventNode_Base* NodeDefault = EventNodeClass->GetDefaultObject<UEventNode_Base>();
 				FilteredNodes.Emplace(NodeDefault);
 			}
@@ -159,6 +239,11 @@ void UEventGraphSchema::GatherEventNodes()
 		GetDerivedClasses(UEventNode_Base::StaticClass(), EventNodes); // 获取已有的 EventNode_Base 列表 (蓝图)
 		for (UClass* Class : EventNodes)
 		{
+			if (Class->ClassGeneratedBy == nullptr && Class->HasAnyClassFlags(CLASS_Abstract | CLASS_NotPlaceable | CLASS_Deprecated))
+			{
+				continue;
+			}
+
 			NativeEventNodes.Emplace(Class);
 		}
 
@@ -187,7 +272,7 @@ void UEventGraphSchema::GatherEventNodes()
 
 		// Dialog
 		AssignedEdGraphNodeClasses.Emplace(UEventNode_Dialog::StaticClass(), UEdGraphNode_Dialog::StaticClass());
-		
+
 		UE_LOG(LogTemp, Log, TEXT("绑定节点类和编辑节点类"));
 	}
 
@@ -209,6 +294,8 @@ void UEventGraphSchema::GatherEventNodes()
 
 		UE_LOG(LogTemp, Log, TEXT("加载加载创建的节点资产进列表"));
 	}
+
+	OnNodeListChanged.Broadcast();
 }
 
 void UEventGraphSchema::OnAssetAdded(const FAssetData& AssetData)
@@ -232,6 +319,8 @@ void UEventGraphSchema::OnAssetAdded(const FAssetData& AssetData)
 
 			UE_LOG(LogTemp, Log, TEXT("编辑器开着的时候，节点资产创建，添加进节点列表"));
 		}
+
+		OnNodeListChanged.Broadcast();
 	}
 }
 
@@ -241,6 +330,8 @@ void UEventGraphSchema::OnAssetRemoved(const FAssetData& AssetData)
 	{
 		BlueprintEventNodes.Remove(AssetData.PackageName);
 		BlueprintEventNodes.Shrink(); // 移除容器末端未使用的内存
+
+		OnNodeListChanged.Broadcast();
 	}
 }
 

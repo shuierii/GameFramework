@@ -13,6 +13,7 @@ public:
 	// UEdGraphNode
 	virtual void AllocateDefaultPins() override; // 默认引脚
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override; // 创建节点widget
+	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;	// 节点、引脚右键菜单
 	virtual bool CanJumpToDefinition() const override;
 	virtual void JumpToDefinition() const override;
 	virtual bool CanUserDeleteNode() const override;

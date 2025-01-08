@@ -7,10 +7,13 @@
 #include "EventEditorCommands.h"
 #include "GraphEditAction.h"
 #include "GraphEditorActions.h"
+#include "SGraphPalette.h"
+#include "SNodePanel.h"
 #include "ToolMenus.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "Graph/EventGraphSchema.h"
 #include "..\..\Public\Graph\Node\EdGraphNode_Base.h"
+#include "Graph/EventGraph.h"
 #include "Graph/Node/EdGraphNode_Dialog.h"
 #include "Graph/Node/EdGraphNode_DialogEvent.h"
 #include "Graph/Node/EdGraphNode_Script.h"
@@ -29,6 +32,7 @@
 #include "Value/NIString.h"
 #include "Value/NIUtility.h"
 #include "Widgets/Notifications/SNotificationList.h"
+#include "Windows/WindowsPlatformApplicationMisc.h"
 
 #define LOCTEXT_NAMESPACE "FEventAssetEditor"
 
@@ -132,14 +136,15 @@ void FEventAssetEditor::CreateWidgets()
 	Args.bHideSelectionTip = true;
 	Args.bShowPropertyMatrixButton = false;
 	Args.DefaultsOnlyVisibility = EEditDefaultsOnlyNodeVisibility::Hide;
+	Args.NotifyHook = this;
 
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	DetailsView = PropertyEditorModule.CreateDetailView(Args);
-	DetailsView->SetIsPropertyEditingEnabledDelegate(FIsPropertyEditingEnabled::CreateLambda([]() { return true; }));
+	DetailsView->SetIsPropertyEditingEnabledDelegate(FIsPropertyEditingEnabled::CreateStatic([]() { return true; }));
 	DetailsView->SetObject(EventAsset);
 
 	// 节点列表
-	// TODO
+	Palette = SNew(SEventPalette, SharedThis(this));
 }
 
 void FEventAssetEditor::CreateToolbar()
@@ -167,6 +172,7 @@ TSharedRef<SGraphEditor> FEventAssetEditor::CreateGraphWidget()
 
 	// 绑定事件
 	SGraphEditor::FGraphEditorEvents InEvents;
+	InEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FEventAssetEditor::OnSelectedNodesChanged);
 	InEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEventAssetEditor::OnNodeDoubleClicked);
 	InEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FEventAssetEditor::OnNodeTitleCommitted);
 
@@ -220,11 +226,40 @@ void FEventAssetEditor::BindGraphCommands()
 	                           FExecuteAction::CreateSP(this, &FEventAssetEditor::JumpToNodeDefinition),
 	                           FCanExecuteAction::CreateSP(this, &FEventAssetEditor::CanJumpToNodeDefinition));
 
-	UE_LOG(LogTemp, Log, TEXT("注册节点操作指令"));
+	UE_LOG(LogTemp, Log, TEXT("注册编辑器输入操作指令"));
 }
 
 void FEventAssetEditor::OnPinConnectionFunc(UEdGraphPin* A, UEdGraphPin* B)
 {
+}
+
+void FEventAssetEditor::OnSelectedNodesChanged(const TSet<UObject*>& Nodes)
+{
+	TArray<UObject*> SelectedObjects;
+
+	if (Nodes.Num() > 0)
+	{
+		for (TSet<UObject*>::TConstIterator SetIt(Nodes); SetIt; ++SetIt)
+		{
+			if (const UEdGraphNode_Base* GraphNode = Cast<UEdGraphNode_Base>(*SetIt))
+			{
+				SelectedObjects.Add(Cast<UObject>(GraphNode->GetEventNode()));
+			}
+			else
+			{
+				SelectedObjects.Add(*SetIt);
+			}
+		}
+	}
+	else
+	{
+		SelectedObjects.Add(GetEventAsset());
+	}
+
+	if (DetailsView.IsValid())
+	{
+		DetailsView->SetObjects(SelectedObjects);
+	}
 }
 
 void FEventAssetEditor::OnNodeDoubleClicked(UEdGraphNode* Node)
@@ -291,7 +326,11 @@ void FEventAssetEditor::DeleteSelectedNodes()
 			{
 				if (UEventNode_Base* EventNode = EventEdGraphNode->GetEventNode())
 				{
-					// TODO
+					// 如果是根节点断开引用
+					if (EventNode->GetClass()->IsChildOf(UEventNode_EventRoot::StaticClass()))
+					{
+						EventAsset->Root = nullptr;
+					}
 
 					FBlueprintEditorUtils::RemoveNode(nullptr, GraphNode, true);
 					continue;
@@ -356,33 +395,135 @@ bool FEventAssetEditor::CanCopyNodes() const
 
 void FEventAssetEditor::CopySelectedNodes() const
 {
+	const FGraphPanelSelectionSet SelectedNodes = FocusedGraphEditor->GetSelectedNodes();
+	for (FGraphPanelSelectionSet::TConstIterator SelectedIt(SelectedNodes); SelectedIt; ++SelectedIt)
+	{
+		if (UEdGraphNode_Base* Node = Cast<UEdGraphNode_Base>(*SelectedIt))
+		{
+			Node->PrepareForCopying();
+		}
+	}
+
+	// Export the selected nodes and place the text on the clipboard
+	FString ExportedText;
+	FEdGraphUtilities::ExportNodesToText(SelectedNodes, /*out*/ ExportedText);
+	FPlatformApplicationMisc::ClipboardCopy(*ExportedText);
+
+	for (FGraphPanelSelectionSet::TConstIterator SelectedIt(SelectedNodes); SelectedIt; ++SelectedIt)
+	{
+		if (UEdGraphNode_Base* Node = Cast<UEdGraphNode_Base>(*SelectedIt))
+		{
+			// Make sure this FlowNode is owned by the FlowAsset it's being pasted into
+			UEventNode_Base* EventNode = Node->EventNode;
+			if (EventNode)
+			{
+				auto Graph = Node->GetGraph();
+
+				if (Graph->GetClass()->IsChildOf(UEventGraph::StaticClass()))
+				{
+					UEventAsset* InEventAsset = CastChecked<UEventGraph>(Graph)->GetEventAsset();
+
+					if (EventNode->GetOuter() != InEventAsset)
+					{
+						// Ensures FlowNode is owned by the FlowAsset
+						EventNode->Rename(nullptr, InEventAsset, REN_DontCreateRedirectors);
+					}
+				}
+
+				EventNode->SetEdGraphNode(Node);
+			}
+		}
+	}
 }
 
 bool FEventAssetEditor::CanCutNodes() const
 {
-	return true;
+	return CanCopyNodes() && CanDeleteNodes();
 }
 
 void FEventAssetEditor::CutSelectedNodes()
 {
+	CopySelectedNodes();
+	DeleteSelectedDuplicableNodes();
 }
 
 bool FEventAssetEditor::CanPasteNodes() const
 {
-	return true;
+	FString ClipboardContent;
+	FPlatformApplicationMisc::ClipboardPaste(ClipboardContent);
+
+	return FEdGraphUtilities::CanImportNodesFromText(EventAsset->GetGraph(), ClipboardContent);
 }
 
 void FEventAssetEditor::PasteNodes()
 {
+	FVector2D PasteLocation = FocusedGraphEditor->GetPasteLocation();
+
+	// Undo/Redo support
+	const FScopedTransaction Transaction(LOCTEXT("PasteNode", "Paste Node"));
+	EventAsset->GetGraph()->Modify();
+	EventAsset->Modify();
+
+	// Clear the selection set (newly pasted stuff will be selected)
+	FocusedGraphEditor->ClearSelectionSet();
+
+	// Grab the text to paste from the clipboard.
+	FString TextToImport;
+	FPlatformApplicationMisc::ClipboardPaste(TextToImport);
+
+	// Import the nodes
+	TSet<UEdGraphNode*> PastedNodes;
+	FEdGraphUtilities::ImportNodesFromText(EventAsset->GetGraph(), TextToImport, /*out*/ PastedNodes);
+
+	//Average position of nodes so we can move them while still maintaining relative distances to each other
+	FVector2D AvgNodePosition(0.0f, 0.0f);
+
+	for (TSet<UEdGraphNode*>::TIterator It(PastedNodes); It; ++It)
+	{
+		const UEdGraphNode* Node = *It;
+		AvgNodePosition.X += Node->NodePosX;
+		AvgNodePosition.Y += Node->NodePosY;
+	}
+
+	if (PastedNodes.Num() > 0)
+	{
+		const float InvNumNodes = 1.0f / static_cast<float>(PastedNodes.Num());
+		AvgNodePosition.X *= InvNumNodes;
+		AvgNodePosition.Y *= InvNumNodes;
+	}
+
+	for (TSet<UEdGraphNode*>::TIterator It(PastedNodes); It; ++It)
+	{
+		UEdGraphNode* Node = *It;
+
+		// Give new node a different Guid from the old one
+		Node->CreateNewGuid();
+
+		// Select the newly pasted stuff
+		FocusedGraphEditor->SetNodeSelection(Node, true);
+
+		Node->NodePosX = (Node->NodePosX - AvgNodePosition.X) + PasteLocation.X;
+		Node->NodePosY = (Node->NodePosY - AvgNodePosition.Y) + PasteLocation.Y;
+
+		Node->SnapToGrid(SNodePanel::GetSnapGridSize());
+	}
+
+	// Update UI
+	FocusedGraphEditor->NotifyGraphChanged();
+
+	EventAsset->PostEditChange();
+	EventAsset->MarkPackageDirty();
 }
 
 bool FEventAssetEditor::CanDuplicateNodes() const
 {
-	return true;
+	return CanCopyNodes();
 }
 
 void FEventAssetEditor::DuplicateNodes()
 {
+	CopySelectedNodes();
+	PasteNodes();
 }
 
 bool FEventAssetEditor::CanJumpToNodeDefinition() const
@@ -432,8 +573,10 @@ TSharedRef<SDockTab> FEventAssetEditor::SpawnTab_Palette(const FSpawnTabArgs& Ar
 
 	return SNew(SDockTab)
 	.Icon(FEditorStyle::GetBrush("Kismet.Tabs.Palette"))
-	.Label(LOCTEXT("EventPaletteTitle", "节点列表"));
-	// TODO
+	.Label(LOCTEXT("EventPaletteTitle", "节点列表"))
+	[
+		Palette.ToSharedRef()
+	];
 }
 
 void FEventAssetEditor::BindToolbarCommands()
@@ -1143,6 +1286,14 @@ void FEventAssetEditor::UnregisterTabSpawners(const TSharedRef<FTabManager>& InT
 	InTabManager->UnregisterTabSpawner(GraphTab);
 	InTabManager->UnregisterTabSpawner(DetailsTab);
 	InTabManager->UnregisterTabSpawner(PaletteTab);
+}
+
+void FEventAssetEditor::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged)
+{
+	if (PropertyChangedEvent.ChangeType != EPropertyChangeType::Interactive)
+	{
+		FocusedGraphEditor->NotifyGraphChanged();
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

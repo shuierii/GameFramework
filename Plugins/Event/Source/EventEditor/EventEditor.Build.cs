@@ -31,7 +31,8 @@ public class EventEditor : ModuleRules
 				"Projects",
 				"DeveloperSettings",
 				"ApplicationCore",
-				"TableUtility"
+				"TableUtility",
+				"CoreUObject"
 			}
 		);
 	}

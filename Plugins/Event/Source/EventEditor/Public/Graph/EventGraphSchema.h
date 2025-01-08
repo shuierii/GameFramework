@@ -5,6 +5,7 @@
 
 // 委托
 DECLARE_DELEGATE_TwoParams(FOnPinConnection, UEdGraphPin*, UEdGraphPin*) // PinA，PinB
+DECLARE_MULTICAST_DELEGATE(FEventGraphSchemaRefresh);
 
 // 图标面板编辑规则
 
@@ -24,6 +25,9 @@ public:
 	static void BindAssetChangeActions();
 	static UClass* GetAssignedEdGraphNodeClass(const UClass* EventNodeClass);
 
+	static TArray<TSharedPtr<FString>> GetEventNodeCategories();
+	static void GetPaletteActions(FGraphActionMenuBuilder& ActionMenuBuilder);
+
 private:
 	static void BindEventNodeActions(FGraphActionMenuBuilder& ActionMenuBuilder);
 
@@ -33,6 +37,7 @@ private:
 
 public:
 	static FOnPinConnection OnPinConnection;
+	static FEventGraphSchemaRefresh OnNodeListChanged;
 
 private:
 	static TArray<UClass*> NativeEventNodes; // 已创建的蓝图节点

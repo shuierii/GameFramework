@@ -1,5 +1,10 @@
 ﻿#include "..\..\..\Public\Graph\Node\EdGraphNode_Base.h"
 
+#include "EventEditorCommands.h"
+#include "GraphEditorActions.h"
+#include "ToolMenu.h"
+#include "Framework/Commands/GenericCommands.h"
+#include "Graph/EventGraph.h"
 #include "Graph/EventGraphSettings.h"
 #include "Graph/Widget/GraphNode_Base.h"
 #include "Kismet2/KismetEditorUtilities.h"
@@ -14,6 +19,45 @@ void UEdGraphNode_Base::AllocateDefaultPins()
 TSharedPtr<SGraphNode> UEdGraphNode_Base::CreateVisualWidget()
 {
 	return SNew(SGraphNode_Base, this);
+}
+
+void UEdGraphNode_Base::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const
+{
+	const FGenericCommands& GenericCommands = FGenericCommands::Get();
+	const FGraphEditorCommandsImpl& GraphCommands = FGraphEditorCommands::Get();
+
+	auto Graph = GetGraph();
+	if (Graph->GetClass()->IsChildOf(UEventGraph::StaticClass()))
+	{
+		const FEventGraphCommands& EventGraphCommands = FEventGraphCommands::Get();
+
+		if (Context->Pin)
+		{
+			FToolMenuSection& Section = Menu->AddSection("EventGraphPinActions", LOCTEXT("PinActionsMenuHeader", "Pin Actions"));
+			if (Context->Pin->Direction == EGPD_Input)
+			{
+				Section.AddMenuEntry(EventGraphCommands.RemovePin);
+			}
+			else if (Context->Pin->Direction == EGPD_Output)
+			{
+				Section.AddMenuEntry(EventGraphCommands.RemovePin);
+			}
+		}
+		else if (Context->Node)
+		{
+			FToolMenuSection& Section = Menu->AddSection("EventGraphNodeActions", LOCTEXT("PinActionsMenuHeader", "Pin Actions"));
+			Section.AddMenuEntry(GenericCommands.Delete);
+			Section.AddMenuEntry(GenericCommands.Cut);
+			Section.AddMenuEntry(GenericCommands.Copy);
+			Section.AddMenuEntry(GenericCommands.Duplicate);
+
+			Section.AddMenuEntry(GraphCommands.BreakNodeLinks);
+
+			Section.AddMenuEntry(EventGraphCommands.JumpToNodeDefinition);
+		}
+		
+		UE_LOG(LogTemp, Log, TEXT("编辑节点/引脚右键操作菜单"));
+	}
 }
 
 bool UEdGraphNode_Base::CanJumpToDefinition() const
@@ -70,7 +114,7 @@ FLinearColor UEdGraphNode_Base::GetNodeTitleColor() const
 	{
 		return *NodeSpecificColor;
 	}
-	
+
 	if (const FLinearColor* StyleColor = GraphSettings->NodeTitleColors.Find(this->EventNode->GetNodeStyle()))
 	{
 		return *StyleColor;
