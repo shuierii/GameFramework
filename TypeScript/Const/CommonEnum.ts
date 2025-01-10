@@ -11,5 +11,12 @@ export module CommonEnum {
         PLAYER,
         NPC,
     }
+
+    export enum PanelLayer {
+        BOTTOM = 0, // 底层
+        DIALOG, // 对话
+        TIPS,   // 提示
+        TOP // 顶层
+    }
 }
 

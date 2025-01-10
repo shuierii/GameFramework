@@ -11,6 +11,7 @@ import { IEventSystem } from "../System/Event/IEventSystem";
 import { E_Dialog } from "./Node/Dialog/E_DiaLog";
 import { EI_GetPlayerA } from "./Node/Input/EI_GetPlayerA";
 import { EI_GetPlayerB } from "./Node/Input/EI_GetPlayerB";
+import { EP_Test } from "./Node/Precondition/EP_Test";
 import { E_DialogEvent } from "./Node/Root/E_DialogEvent";
 import { E_Script } from "./Node/Script/E_Script";
 import { ET_Test } from "./Node/Trigger/ET_Test";
@@ -34,5 +35,8 @@ export module Event {
 
         // dialog
         eventSys.BindNode(E_Dialog);
+
+        // precondition
+        eventSys.BindNode(EP_Test);
     }
 }

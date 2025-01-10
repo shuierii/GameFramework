@@ -8,7 +8,17 @@ public class GameFramework : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "JsEnv", "Puerts" });
+		PublicDependencyModuleNames.AddRange(new string[]
+			{
+				"Core",
+				"CoreUObject",
+				"Engine", 
+				"InputCore",
+				"JsEnv", 
+				"Puerts",
+				"UMG"
+			}
+		);
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

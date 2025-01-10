@@ -1,1 +1,30 @@
-{"type":"E_DialogEvent","input_list":[],"precondition":{"type":"EP_Test","input_list":[],"output_list":[]},"output_list":[],"id":100,"trigger_list":[{"type":"ET_Test","input_list":[],"output_list":[]}],"script_list":[{"type":"E_Script","input_list":[],"output_list":[],"dialog":{"type":"E_Dialog","input_list":[],"output_list":[]}}]}
+{
+    "type": "E_DialogEvent",
+    "input_list": [],
+    "precondition": {
+        "type": "EP_Test",
+        "input_list": [],
+        "output_list": []
+    },
+    "output_list": [],
+    "id": 100,
+    "trigger_list": [
+        {
+            "type": "ET_Test",
+            "input_list": [],
+            "output_list": []
+        }
+    ],
+    "script_list": [
+        {
+            "type": "E_Script",
+            "input_list": [],
+            "output_list": [],
+            "dialog": {
+                "type": "E_Dialog",
+                "input_list": [],
+                "output_list": []
+            }
+        }
+    ]
+}

@@ -12,4 +12,5 @@ export class SystemID {
     static ENTITY_SYSTEM: number = INDEX++;
     static PLAYER_SYSTEM: number = INDEX++;
     static EVENT_SYSTEM: number = INDEX++;
+    static UI_SYSTEM: number = INDEX++;
 }

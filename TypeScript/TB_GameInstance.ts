@@ -17,6 +17,7 @@ import { EventSystem } from "./System/Event/EventSystem";
 import { PlayerSystem } from "./System/Player/PlayerSystem";
 import { TestEventSystem } from "./System/TestEventSystem";
 import { TestSystem } from "./System/TestSystem";
+import { UISystem } from "./System/UI/UISystem";
 import { LogUtility } from "./Utility/LogUtility";
 
 class TB_GameInstance extends UE.TS_GameInstance {
@@ -39,6 +40,7 @@ class TB_GameInstance extends UE.TS_GameInstance {
         MainGame.Instance.BindSystem(SystemID.ENTITY_SYSTEM, EntitySystem);
         MainGame.Instance.BindSystem(SystemID.PLAYER_SYSTEM, PlayerSystem);
         MainGame.Instance.BindSystem(SystemID.EVENT_SYSTEM, EventSystem);
+        MainGame.Instance.BindSystem(SystemID.UI_SYSTEM, UISystem);
         MainGame.Instance.BindSystem(SystemID.TEST_EVENT_SYSTEM, TestEventSystem);
         MainGame.Instance.BindSystem(SystemID.TEST_SYSTEM, TestSystem);
 
