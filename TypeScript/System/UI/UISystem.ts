@@ -39,7 +39,19 @@ export class UISystem extends SystemBase implements IUISystem {
     }
 
     protected OnRelease(): void {
+        if (this.mRootWidgeht) {
+            this.mRootWidgeht.RemoveFromParent();
+        }
 
+        for (let panel of this.mNameToPanelMap.values()) {
+            panel.Disable();
+            panel.Destroy();
+        }
+
+        this.mNameToPanelMap.clear();
+        this.mPanelLayerToPanelNameMap.clear();
+        this.mLayerRootMap.clear();
+        this.mRootWidgeht = null;
     }
 
     /**
